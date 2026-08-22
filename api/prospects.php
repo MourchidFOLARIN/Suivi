@@ -101,7 +101,11 @@ switch ($method) {
             'notes' => $data['notes'] ?? null,
         ]);
 
-        respond(['success' => true, 'message' => 'Prospect ajouté.', 'id' => $pdo->lastInsertId()], 201);
+        $lastId = ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'pgsql')
+            ? $pdo->lastInsertId('prospects_id_seq')
+            : $pdo->lastInsertId();
+
+        respond(['success' => true, 'message' => 'Prospect ajouté.', 'id' => $lastId], 201);
         break;
 
     // ---------- MODIFICATION ----------
