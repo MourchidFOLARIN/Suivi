@@ -1,0 +1,19 @@
+# Ignorer les fichiers sensibles et temporaires
+.env
+.env.local
+*.log
+*.tmp
+
+# XAMPP / WAMP locaux
+/opt/
+nbproject/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
