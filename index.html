@@ -23,11 +23,60 @@
         <div>Suivi Prospects <span class="brand-sub">— Marketing Relationnel</span></div>
     </div>
     <div class="header-actions">
+        <div class="user-badge" id="user-badge" style="display:none;">
+            <span class="user-name" id="user-name-display"></span>
+            <button class="btn-icon btn-logout" id="btn-logout" title="Déconnexion" aria-label="Déconnexion">🚪</button>
+        </div>
         <button class="btn btn-ghost" id="btn-pwa-install" style="display:none;" title="Installer l'application sur votre téléphone">📲 Installer l'application</button>
         <button class="theme-toggle-btn" id="theme-toggle" title="Changer le thème" aria-label="Changer le thème">🌙</button>
-        <button class="btn btn-primary" id="btn-open-add">+ Nouveau prospect</button>
+        <button class="btn btn-primary" id="btn-open-add" style="display:none;">+ Nouveau prospect</button>
     </div>
 </header>
+
+<!-- Écran d'Authentification -->
+<div id="auth-screen" class="auth-screen">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="brand-mark large">SP</div>
+            <h2>Bienvenue</h2>
+            <p>Connectez-vous pour gérer vos prospects</p>
+        </div>
+        <div class="auth-tabs">
+            <button class="auth-tab active" id="tab-login-btn">Connexion</button>
+            <button class="auth-tab" id="tab-register-btn">Inscription</button>
+        </div>
+        
+        <!-- Formulaire de Connexion -->
+        <form id="login-form" class="auth-form active">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="login-email" required>
+            </div>
+            <div class="form-group">
+                <label>Mot de passe</label>
+                <input type="password" id="login-password" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-full">Se connecter</button>
+        </form>
+
+        <!-- Formulaire d'Inscription -->
+        <form id="register-form" class="auth-form">
+            <div class="form-group">
+                <label>Nom complet</label>
+                <input type="text" id="register-nom" required>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="register-email" required>
+            </div>
+            <div class="form-group">
+                <label>Mot de passe</label>
+                <input type="password" id="register-password" required minlength="6">
+            </div>
+            <button type="submit" class="btn btn-primary w-full">Créer mon compte</button>
+        </form>
+    </div>
+</div>
 
 <main>
 
@@ -181,6 +230,41 @@
         <div class="modal-footer">
             <button type="button" class="btn btn-ghost" id="btn-confirm-cancel">Annuler</button>
             <button type="button" class="btn btn-danger" id="btn-confirm-ok">Supprimer</button>
+        </div>
+    </div>
+<!-- ---------- Modale d'Onboarding / Prise en main ---------- -->
+<div class="modal-overlay" id="onboarding-modal-overlay">
+    <div class="modal modal-onboarding">
+        <div class="onboarding-slides">
+            <!-- Slide 1 -->
+            <div class="onboarding-slide active" data-slide="1">
+                <div class="onboarding-icon">🚀</div>
+                <h2>Bienvenue dans Suivi Prospects</h2>
+                <p>Votre outil ultime pour structurer vos contacts, planifier vos présentations et accélérer le développement de votre réseau de vente.</p>
+            </div>
+            <!-- Slide 2 -->
+            <div class="onboarding-slide" data-slide="2">
+                <div class="onboarding-icon">📊</div>
+                <h2>Pipeline & Relances WhatsApp</h2>
+                <p>Suivez l'avancement de chaque prospect par étape, recevez des alertes en cas de relance en retard et contactez vos prospects directement sur WhatsApp en 1 clic.</p>
+            </div>
+            <!-- Slide 3 -->
+            <div class="onboarding-slide" data-slide="3">
+                <div class="onboarding-icon">📱</div>
+                <h2>Application PWA & Mode Sombre</h2>
+                <p>Installez l'application sur votre écran d'accueil pour l'utiliser comme une vraie app mobile. Basculez en thème sombre à tout moment pour un confort visuel optimal.</p>
+            </div>
+        </div>
+
+        <div class="onboarding-dots">
+            <span class="dot active" data-dot="1"></span>
+            <span class="dot" data-dot="2"></span>
+            <span class="dot" data-dot="3"></span>
+        </div>
+
+        <div class="onboarding-footer">
+            <button class="btn btn-ghost" id="btn-onboarding-skip">Passer</button>
+            <button class="btn btn-primary" id="btn-onboarding-next">Suivant →</button>
         </div>
     </div>
 </div>

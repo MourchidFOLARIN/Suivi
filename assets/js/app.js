@@ -1,4 +1,5 @@
 const API_URL = 'api/prospects.php';
+const AUTH_URL = 'api/auth.php';
 
 const STATUTS = {
     nouveau:   { label: 'Nouveau',              step: 0 },
@@ -10,6 +11,7 @@ const STATUTS = {
 };
 const PIPELINE_STEPS = ['nouveau', 'invite', 'presente', 'interesse', 'inscrit'];
 
+let currentUser = null;
 let currentFilter = '';
 let currentSearch = '';
 let currentSort = 'date_desc';
@@ -18,8 +20,10 @@ let currentProspectsData = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
-    chargerStats();
-    chargerProspects();
+    verifierAuthentification();
+
+    // Gestion de l'authentification UI
+    initAuthUI();
 
     const themeToggleBtn = document.getElementById('theme-toggle');
     if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
@@ -71,7 +75,221 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.target.id === 'confirm-modal-overlay') fermerConfirmModal(false);
         });
     }
+
+    // Onboarding UI
+    initOnboardingUI();
 });
+
+/* ---------------- Authentification & Sessions ---------------- */
+
+async function verifierAuthentification() {
+    try {
+        const res = await fetch(`${AUTH_URL}?action=me`);
+        const json = await res.json();
+        if (json.success && json.user) {
+            currentUser = json.user;
+            afficherAppConnectee();
+        } else {
+            currentUser = null;
+            afficherEcranAuth();
+        }
+    } catch (err) {
+        console.error('Erreur authentification:', err);
+        afficherEcranAuth();
+    }
+}
+
+function afficherAppConnectee() {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.querySelector('main').style.display = 'block';
+    
+    const userBadge = document.getElementById('user-badge');
+    const userNameDisplay = document.getElementById('user-name-display');
+    const btnAdd = document.getElementById('btn-open-add');
+
+    if (userBadge) userBadge.style.display = 'flex';
+    if (userNameDisplay) userNameDisplay.textContent = `👋 ${currentUser.nom}`;
+    if (btnAdd) btnAdd.style.display = 'inline-flex';
+
+    chargerStats();
+    chargerProspects();
+    verifierOnboarding();
+}
+
+function afficherEcranAuth() {
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.querySelector('main').style.display = 'none';
+
+    const userBadge = document.getElementById('user-badge');
+    const btnAdd = document.getElementById('btn-open-add');
+
+    if (userBadge) userBadge.style.display = 'none';
+    if (btnAdd) btnAdd.style.display = 'none';
+}
+
+function initAuthUI() {
+    const tabLogin = document.getElementById('tab-login-btn');
+    const tabRegister = document.getElementById('tab-register-btn');
+    const formLogin = document.getElementById('login-form');
+    const formRegister = document.getElementById('register-form');
+    const btnLogout = document.getElementById('btn-logout');
+
+    if (tabLogin && tabRegister) {
+        tabLogin.addEventListener('click', () => {
+            tabLogin.classList.add('active');
+            tabRegister.classList.remove('active');
+            formLogin.classList.add('active');
+            formRegister.classList.remove('active');
+        });
+
+        tabRegister.addEventListener('click', () => {
+            tabRegister.classList.add('active');
+            tabLogin.classList.remove('active');
+            formRegister.classList.add('active');
+            formLogin.classList.remove('active');
+        });
+    }
+
+    if (formLogin) {
+        formLogin.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const mot_de_passe = document.getElementById('login-password').value;
+
+            try {
+                const res = await fetch(`${AUTH_URL}?action=login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, mot_de_passe })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    currentUser = json.user;
+                    afficherToast('Connexion réussie !');
+                    afficherAppConnectee();
+                } else {
+                    afficherToast(json.message || 'Identifiants incorrects.', true);
+                }
+            } catch (err) {
+                afficherToast('Erreur de connexion au serveur.', true);
+            }
+        });
+    }
+
+    if (formRegister) {
+        formRegister.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nom = document.getElementById('register-nom').value.trim();
+            const email = document.getElementById('register-email').value.trim();
+            const mot_de_passe = document.getElementById('register-password').value;
+
+            try {
+                const res = await fetch(`${AUTH_URL}?action=register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nom, email, mot_de_passe })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    currentUser = json.user;
+                    afficherToast('Compte créé avec succès !');
+                    afficherAppConnectee();
+                } else {
+                    afficherToast(json.message || 'Erreur lors de l\'inscription.', true);
+                }
+            } catch (err) {
+                afficherToast('Erreur lors de l\'inscription.', true);
+            }
+        });
+    }
+
+    if (btnLogout) {
+        btnLogout.addEventListener('click', async () => {
+            try {
+                await fetch(`${AUTH_URL}?action=logout`, { method: 'POST' });
+                currentUser = null;
+                afficherToast('Déconnecté.');
+                afficherEcranAuth();
+            } catch (err) {
+                afficherToast('Erreur lors de la déconnexion.', true);
+            }
+        });
+    }
+}
+
+/* ---------------- Onboarding Tour (Prise en main) ---------------- */
+
+let onboardingCurrentSlide = 1;
+const ONBOARDING_TOTAL_SLIDES = 3;
+
+function verifierOnboarding() {
+    if (!currentUser) return;
+    const done = localStorage.getItem(`suivi_onboarding_done_${currentUser.id}`);
+    if (!done) {
+        ouvrirOnboardingModal();
+    }
+}
+
+function ouvrirOnboardingModal() {
+    onboardingCurrentSlide = 1;
+    afficherOnboardingSlide(onboardingCurrentSlide);
+    const overlay = document.getElementById('onboarding-modal-overlay');
+    if (overlay) overlay.classList.add('open');
+}
+
+function fermerOnboardingModal() {
+    const overlay = document.getElementById('onboarding-modal-overlay');
+    if (overlay) overlay.classList.remove('open');
+    if (currentUser) {
+        localStorage.setItem(`suivi_onboarding_done_${currentUser.id}`, 'true');
+    }
+}
+
+function afficherOnboardingSlide(slideIndex) {
+    const slides = document.querySelectorAll('.onboarding-slide');
+    const dots = document.querySelectorAll('.onboarding-dots .dot');
+    const btnNext = document.getElementById('btn-onboarding-next');
+
+    slides.forEach(s => s.classList.remove('active'));
+    dots.forEach(d => d.classList.remove('active'));
+
+    const activeSlide = document.querySelector(`.onboarding-slide[data-slide="${slideIndex}"]`);
+    const activeDot = document.querySelector(`.onboarding-dots .dot[data-dot="${slideIndex}"]`);
+
+    if (activeSlide) activeSlide.classList.add('active');
+    if (activeDot) activeDot.classList.add('active');
+
+    if (btnNext) {
+        btnNext.textContent = slideIndex === ONBOARDING_TOTAL_SLIDES ? "C'est parti !" : "Suivant →";
+    }
+}
+
+function initOnboardingUI() {
+    const btnSkip = document.getElementById('btn-onboarding-skip');
+    const btnNext = document.getElementById('btn-onboarding-next');
+
+    if (btnSkip) {
+        btnSkip.addEventListener('click', fermerOnboardingModal);
+    }
+
+    if (btnNext) {
+        btnNext.addEventListener('click', () => {
+            if (onboardingCurrentSlide < ONBOARDING_TOTAL_SLIDES) {
+                onboardingCurrentSlide++;
+                afficherOnboardingSlide(onboardingCurrentSlide);
+            } else {
+                fermerOnboardingModal();
+            }
+        });
+    }
+
+    document.querySelectorAll('.onboarding-dots .dot').forEach(dot => {
+        dot.addEventListener('click', () => {
+            onboardingCurrentSlide = parseInt(dot.dataset.dot);
+            afficherOnboardingSlide(onboardingCurrentSlide);
+        });
+    });
+}
 
 /* ---------------- Thème Dark / Light ---------------- */
 
@@ -142,11 +360,13 @@ async function chargerProspects() {
         if (json.success) {
             currentProspectsData = json.data || [];
             trierEtAfficherProspects();
+        } else if (res.status === 401) {
+            afficherEcranAuth();
         } else {
             afficherToast(json.message || 'Erreur de chargement.', true);
         }
     } catch (err) {
-        afficherToast('Impossible de contacter le serveur. Vérifie que PHP/MySQL sont démarrés.', true);
+        afficherToast('Impossible de contacter le serveur.', true);
         console.error(err);
     }
 }
@@ -221,7 +441,7 @@ function afficherProspects(prospects) {
             <div class="empty-state">
                 <div class="empty-icon">🔍</div>
                 <strong>Aucun prospect ici pour l'instant</strong>
-                Utilise le bouton <strong>+</strong> pour ajouter ton premier contact.
+                Utilise le bouton <strong>+ Nouveau prospect</strong> pour ajouter ton premier contact.
             </div>`;
         return;
     }
@@ -231,16 +451,13 @@ function afficherProspects(prospects) {
     container.innerHTML = prospects.map((p, index) => {
         const statutInfo = STATUTS[p.statut] || STATUTS.nouveau;
 
-        // Pipeline ou label perdu
         const pipelineHtml = statutInfo.step === -1
             ? `<div class="pipeline-label lost">❌ Prospect perdu</div>`
             : construirePipeline(statutInfo.step) + `<div class="pipeline-label">${statutInfo.label}</div>`;
 
-        // WhatsApp
         const cleanPhone = p.telephone ? p.telephone.replace(/\D/g, '') : '';
         const waUrl = cleanPhone ? `https://wa.me/${cleanPhone}` : null;
 
-        // Méta-données
         const metaItems = [];
         if (p.telephone) {
             metaItems.push(waUrl
@@ -252,7 +469,6 @@ function afficherProspects(prospects) {
         if (p.source) metaItems.push(`🔗 ${escapeHtml(p.source)}`);
         const metaHtml = metaItems.join('<span class="meta-sep">·</span>');
 
-        // Badge présentation
         let presentationBadge = '';
         if (p.date_presentation) {
             presentationBadge = Number(p.presentation_faite)
@@ -260,7 +476,6 @@ function afficherProspects(prospects) {
                 : `<span class="badge badge-presentation-prevue">📢 Présentation prévue le ${formaterDate(p.date_presentation)}</span>`;
         }
 
-        // Badge relance
         let relanceBadge = '';
         if (p.prochaine_relance && p.statut !== 'inscrit' && p.statut !== 'perdu') {
             relanceBadge = p.prochaine_relance < todayStr
@@ -268,12 +483,10 @@ function afficherProspects(prospects) {
                 : `<span class="badge badge-relance-ok">📅 Relance le ${formaterDate(p.prochaine_relance)}</span>`;
         }
 
-        // Bouton WhatsApp
         const waBtnHtml = waUrl
             ? `<a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="btn-icon btn-whatsapp" title="Écrire sur WhatsApp" aria-label="WhatsApp">${WHATSAPP_ICON}</a>`
             : '';
 
-        // Options du sélecteur de statut
         const statutOptions = Object.entries(STATUTS)
             .map(([key, val]) => `<option value="${key}" ${key === p.statut ? 'selected' : ''}>${val.label}</option>`)
             .join('');
@@ -311,7 +524,7 @@ function construirePipeline(currentStep) {
     }).join('') + `</div>`;
 }
 
-/* ---------------- Modale / Formulaire ---------------- */
+/* ---------------- Modale / Formulaire Prospect ---------------- */
 
 async function ouvrirModal(id = null) {
     editingId = id;
@@ -380,7 +593,6 @@ async function soumettreForm(e) {
         notes: document.getElementById('f-notes').value.trim() || null,
     };
 
-    // Progression automatique du statut selon date de présentation
     if (payload.statut === 'nouveau' && payload.date_presentation) {
         payload.statut = payload.presentation_faite ? 'presente' : 'invite';
     }

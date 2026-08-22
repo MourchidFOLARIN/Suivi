@@ -7,8 +7,12 @@
  *
  * ── En production (Render) ────────────────────────────
  * Render injecte automatiquement DATABASE_URL dans l'environnement.
- * Auto-création de la table PostgreSQL si elle n'existe pas.
+ * Auto-création des tables PostgreSQL/MySQL si elles n'existent pas.
  */
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 define('LOCAL_DB_HOST', 'localhost');
 define('LOCAL_DB_NAME', 'suivi_prospects');
@@ -19,6 +23,7 @@ header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Credentials: true');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -51,8 +56,7 @@ function getPDO(): PDO
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             ]);
 
-            // Auto-initialisation automatique de la table si nécessaire
-            initPostgresIfNeeded($pdo);
+            initDatabaseIfNeeded($pdo, 'pgsql');
         } else {
             // ── Mode Local (MySQL / XAMPP) ─────────────────────────
             $dsn = 'mysql:host=' . LOCAL_DB_HOST . ';dbname=' . LOCAL_DB_NAME . ';charset=utf8mb4';
@@ -60,6 +64,8 @@ function getPDO(): PDO
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             ]);
+
+            initDatabaseIfNeeded($pdo, 'mysql');
         }
 
         return $pdo;
@@ -74,43 +80,102 @@ function getPDO(): PDO
     }
 }
 
-function initPostgresIfNeeded(PDO $pdo): void
+function initDatabaseIfNeeded(PDO $pdo, string $driver): void
 {
     try {
-        $pdo->exec("
-            CREATE TABLE IF NOT EXISTS prospects (
-                id              SERIAL PRIMARY KEY,
-                nom             VARCHAR(100) NOT NULL,
-                prenom          VARCHAR(100) NOT NULL,
-                telephone       VARCHAR(30)  NOT NULL,
-                email           VARCHAR(150) DEFAULT NULL,
-                source          VARCHAR(100) DEFAULT NULL,
-                statut          VARCHAR(20)  NOT NULL DEFAULT 'nouveau',
-                invitation_faite    SMALLINT NOT NULL DEFAULT 0,
-                date_invitation     DATE     DEFAULT NULL,
-                presentation_faite  SMALLINT NOT NULL DEFAULT 0,
-                date_presentation   DATE     DEFAULT NULL,
-                date_inscription    DATE     DEFAULT NULL,
-                prochaine_relance   DATE     DEFAULT NULL,
-                notes           TEXT     DEFAULT NULL,
-                date_ajout      TIMESTAMP NOT NULL DEFAULT NOW(),
-                date_maj        TIMESTAMP NOT NULL DEFAULT NOW()
-            );
-        ");
-
-        $count = (int) $pdo->query("SELECT COUNT(*) FROM prospects")->fetchColumn();
-        if ($count === 0) {
+        if ($driver === 'pgsql') {
+            // 1. Table users (PostgreSQL)
             $pdo->exec("
-                INSERT INTO prospects (nom, prenom, telephone, email, source, statut, invitation_faite, date_invitation, presentation_faite, date_presentation, notes)
-                VALUES
-                ('AGOSSOU', 'Chimène', '0197001122', 'chimene.a@example.com', 'Ami(e)', 'presente', 1, '2026-08-10', 1, '2026-08-15', 'Très motivée, attend de voir les résultats de son cousin.'),
-                ('DOSSOU', 'Ferdinand', '0197002233', NULL, 'Marché', 'invite', 1, '2026-08-18', 0, NULL, 'A dit qu il rappellerait après le week-end.'),
-                ('HOUNTONDJI', 'Sandra', '0197003344', 'sandra.h@example.com', 'Réseaux sociaux', 'nouveau', 0, NULL, 0, NULL, 'Contact pris via Facebook, pas encore relancée.');
+                CREATE TABLE IF NOT EXISTS users (
+                    id              SERIAL PRIMARY KEY,
+                    nom             VARCHAR(100) NOT NULL,
+                    email           VARCHAR(150) UNIQUE NOT NULL,
+                    mot_de_passe    VARCHAR(255) NOT NULL,
+                    date_creation   TIMESTAMP NOT NULL DEFAULT NOW()
+                );
             ");
+
+            // 2. Table prospects (PostgreSQL)
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS prospects (
+                    id              SERIAL PRIMARY KEY,
+                    user_id         INT DEFAULT NULL,
+                    nom             VARCHAR(100) NOT NULL,
+                    prenom          VARCHAR(100) NOT NULL,
+                    telephone       VARCHAR(30)  NOT NULL,
+                    email           VARCHAR(150) DEFAULT NULL,
+                    source          VARCHAR(100) DEFAULT NULL,
+                    statut          VARCHAR(20)  NOT NULL DEFAULT 'nouveau',
+                    invitation_faite    SMALLINT NOT NULL DEFAULT 0,
+                    date_invitation     DATE     DEFAULT NULL,
+                    presentation_faite  SMALLINT NOT NULL DEFAULT 0,
+                    date_presentation   DATE     DEFAULT NULL,
+                    date_inscription    DATE     DEFAULT NULL,
+                    prochaine_relance   DATE     DEFAULT NULL,
+                    notes           TEXT     DEFAULT NULL,
+                    date_ajout      TIMESTAMP NOT NULL DEFAULT NOW(),
+                    date_maj        TIMESTAMP NOT NULL DEFAULT NOW()
+                );
+            ");
+
+            // Migration user_id sur prospects si inexistante
+            $pdo->exec("ALTER TABLE prospects ADD COLUMN IF NOT EXISTS user_id INT DEFAULT NULL;");
+
+        } else {
+            // 1. Table users (MySQL)
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS users (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    nom VARCHAR(100) NOT NULL,
+                    email VARCHAR(150) UNIQUE NOT NULL,
+                    mot_de_passe VARCHAR(255) NOT NULL,
+                    date_creation DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
+
+            // 2. Table prospects (MySQL)
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS prospects (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id INT DEFAULT NULL,
+                    nom VARCHAR(100) NOT NULL,
+                    prenom VARCHAR(100) NOT NULL,
+                    telephone VARCHAR(30) NOT NULL,
+                    email VARCHAR(150) DEFAULT NULL,
+                    source VARCHAR(100) DEFAULT NULL,
+                    statut ENUM('nouveau', 'invite', 'presente', 'interesse', 'inscrit', 'perdu') NOT NULL DEFAULT 'nouveau',
+                    invitation_faite TINYINT(1) NOT NULL DEFAULT 0,
+                    date_invitation DATE DEFAULT NULL,
+                    presentation_faite TINYINT(1) NOT NULL DEFAULT 0,
+                    date_presentation DATE DEFAULT NULL,
+                    date_inscription DATE DEFAULT NULL,
+                    prochaine_relance DATE DEFAULT NULL,
+                    notes TEXT DEFAULT NULL,
+                    date_ajout DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    date_maj DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
+
+            // Colonne user_id MySQL si elle n'existe pas encore
+            try {
+                $pdo->exec("ALTER TABLE prospects ADD COLUMN user_id INT DEFAULT NULL;");
+            } catch (Exception $ignored) {}
         }
     } catch (Exception $e) {
-        error_log('Init Postgres Error: ' . $e->getMessage());
+        error_log('Init DB Error: ' . $e->getMessage());
     }
+}
+
+function requireAuth(): array
+{
+    if (empty($_SESSION['user_id'])) {
+        respond(['success' => false, 'message' => 'Non authentifié. Veuillez vous connecter.'], 401);
+    }
+    return [
+        'id'    => (int)$_SESSION['user_id'],
+        'nom'   => $_SESSION['user_nom'] ?? '',
+        'email' => $_SESSION['user_email'] ?? '',
+    ];
 }
 
 function jsonInput(): array
