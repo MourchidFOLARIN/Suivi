@@ -118,7 +118,10 @@ function initDatabaseIfNeeded(PDO $pdo, string $driver): void
                 );
             ");
 
-            // Migration user_id sur prospects si inexistante
+            // Garantir que toutes les colonnes existent (PostgreSQL)
+            $pdo->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS nom VARCHAR(100);");
+            $pdo->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(150);");
+            $pdo->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS mot_de_passe VARCHAR(255);");
             $pdo->exec("ALTER TABLE prospects ADD COLUMN IF NOT EXISTS user_id INT DEFAULT NULL;");
 
         } else {
@@ -156,10 +159,11 @@ function initDatabaseIfNeeded(PDO $pdo, string $driver): void
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             ");
 
-            // Colonne user_id MySQL si elle n'existe pas encore
-            try {
-                $pdo->exec("ALTER TABLE prospects ADD COLUMN user_id INT DEFAULT NULL;");
-            } catch (Exception $ignored) {}
+            // Garantir que toutes les colonnes existent (MySQL)
+            try { $pdo->exec("ALTER TABLE users ADD COLUMN nom VARCHAR(100) NOT NULL;"); } catch (Exception $e) {}
+            try { $pdo->exec("ALTER TABLE users ADD COLUMN email VARCHAR(150) UNIQUE NOT NULL;"); } catch (Exception $e) {}
+            try { $pdo->exec("ALTER TABLE users ADD COLUMN mot_de_passe VARCHAR(255) NOT NULL;"); } catch (Exception $e) {}
+            try { $pdo->exec("ALTER TABLE prospects ADD COLUMN user_id INT DEFAULT NULL;"); } catch (Exception $e) {}
         }
     } catch (Exception $e) {
         error_log('Init DB Error: ' . $e->getMessage());
