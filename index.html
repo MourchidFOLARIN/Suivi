@@ -2,8 +2,15 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Suivi de Prospects — Marketing Relationnel</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0284c7">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SuiviProspects">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/style.css">
@@ -16,6 +23,7 @@
         <div>Suivi Prospects <span class="brand-sub">— Marketing Relationnel</span></div>
     </div>
     <div class="header-actions">
+        <button class="btn btn-ghost" id="btn-pwa-install" style="display:none;" title="Installer l'application sur votre téléphone">📲 Installer l'application</button>
         <button class="theme-toggle-btn" id="theme-toggle" title="Changer le thème" aria-label="Changer le thème">🌙</button>
         <button class="btn btn-primary" id="btn-open-add">+ Nouveau prospect</button>
     </div>

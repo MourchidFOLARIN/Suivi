@@ -341,6 +341,18 @@ main {
     border-color: var(--color-accent-blue);
 }
 
+.btn-pwa-install {
+    background: linear-gradient(135deg, rgba(2, 132, 199, 0.2), rgba(249, 115, 22, 0.2));
+    border: 1px solid var(--color-accent-blue);
+    color: var(--color-text);
+    font-weight: 600;
+}
+.btn-pwa-install:hover {
+    background: linear-gradient(135deg, #0284c7, #f97316);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+}
+
 .btn-icon {
     background: var(--color-surface-glass);
     backdrop-filter: var(--glass-blur);

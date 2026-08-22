@@ -432,3 +432,32 @@ function formaterDate(dateStr) {
     const [y, m, d] = dateStr.split('-');
     return y && m && d ? `${d}/${m}/${y}` : dateStr;
 }
+
+/* ---------------- Registration PWA & Service Worker ---------------- */
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then((reg) => console.log('Service Worker PWA enregistré:', reg.scope))
+            .catch((err) => console.error('Erreur Service Worker PWA:', err));
+    });
+}
+
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const installBtn = document.getElementById('btn-pwa-install');
+    if (installBtn) {
+        installBtn.style.display = 'inline-flex';
+        installBtn.addEventListener('click', async () => {
+            installBtn.style.display = 'none';
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`Résultat installation PWA: ${outcome}`);
+                deferredPrompt = null;
+            }
+        });
+    }
+});
