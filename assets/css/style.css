@@ -934,4 +934,74 @@ main {
 
     /* Masquer le bouton entête d'ajout pour utiliser le FAB flottant */
     #btn-open-add { display: none; }
+
+    /* Correction Centrage & Affichage de l'Onboarding sur Mobile */
+    .modal-overlay#onboarding-modal-overlay {
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+    }
+    .modal.modal-onboarding {
+        border-radius: 24px;
+        max-height: 88vh;
+        width: 100%;
+        margin: auto;
+        padding: 24px 18px 20px;
+        animation: popModal 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .onboarding-icon {
+        font-size: 44px;
+        margin-bottom: 10px;
+    }
+    .onboarding-slide h2 {
+        font-size: 18px;
+    }
+    .onboarding-slide p {
+        font-size: 13.5px;
+        line-height: 1.45;
+    }
+
+    /* Optimisation des formulaires de Connexion/Inscription sur Mobile */
+    .auth-screen {
+        padding: 12px 12px 32px;
+        min-height: calc(100dvh - 70px);
+        align-items: center;
+    }
+    .auth-card {
+        padding: 20px 16px;
+        border-radius: 20px;
+    }
+    .auth-header {
+        margin-bottom: 16px;
+    }
+    .brand-mark.large {
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+        margin-bottom: 8px;
+    }
+    .auth-header h2 {
+        font-size: 19px;
+    }
+    .auth-header p {
+        font-size: 13px;
+    }
+    .auth-tabs {
+        margin-bottom: 16px;
+    }
+    .auth-tab {
+        padding: 12px 8px;
+        font-size: 14px;
+        min-height: 44px;
+    }
+    .auth-form input {
+        padding: 14px 14px;
+        font-size: 16px; /* Empêche le zoom auto sur iPhone */
+        min-height: 48px;
+    }
+    .auth-form .btn {
+        min-height: 48px;
+        font-size: 15px;
+        font-weight: 700;
+    }
 }

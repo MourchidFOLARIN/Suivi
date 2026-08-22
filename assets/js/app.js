@@ -267,6 +267,11 @@ function afficherOnboardingSlide(slideIndex) {
 function initOnboardingUI() {
     const btnSkip = document.getElementById('btn-onboarding-skip');
     const btnNext = document.getElementById('btn-onboarding-next');
+    const btnOpenHelp = document.getElementById('btn-open-onboarding');
+
+    if (btnOpenHelp) {
+        btnOpenHelp.addEventListener('click', ouvrirOnboardingModal);
+    }
 
     if (btnSkip) {
         btnSkip.addEventListener('click', fermerOnboardingModal);
