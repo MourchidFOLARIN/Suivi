@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi de Prospects — Marketing Relationnel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<header class="app-header">
+    <div class="brand">
+        <div class="brand-mark">SP</div>
+        <div>Suivi Prospects <span class="brand-sub">— Marketing Relationnel</span></div>
+    </div>
+    <div class="header-actions">
+        <button class="theme-toggle-btn" id="theme-toggle" title="Changer le thème" aria-label="Changer le thème">🌙</button>
+        <button class="btn btn-primary" id="btn-open-add">+ Nouveau prospect</button>
+    </div>
+</header>
+
+<main>
+
+    <section class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label">Total prospects</div>
+            <div class="stat-value" id="stat-total">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">En cours</div>
+            <div class="stat-value" id="stat-encours">0</div>
+        </div>
+        <div class="stat-card accent">
+            <div class="stat-label">Inscrits</div>
+            <div class="stat-value" id="stat-inscrits">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Taux de conversion</div>
+            <div class="stat-value" id="stat-taux">0%</div>
+        </div>
+    </section>
+
+    <div class="toolbar">
+        <div class="toolbar-controls">
+            <input type="text" class="search-input" id="search-input" placeholder="Rechercher un nom, prénom ou téléphone...">
+            <select class="sort-select" id="sort-select" aria-label="Trier la liste">
+                <option value="date_desc">Trier par : Date d'ajout (récent)</option>
+                <option value="nom_asc">Trier par : Nom (A-Z)</option>
+                <option value="relance_asc">Trier par : Prochaine relance</option>
+            </select>
+        </div>
+        <div class="toolbar-filters" id="status-filters">
+            <button class="pill active" data-statut="">Tous</button>
+            <button class="pill" data-statut="nouveau">Nouveau</button>
+            <button class="pill" data-statut="invite">Invité</button>
+            <button class="pill" data-statut="presente">Présentation faite</button>
+            <button class="pill" data-statut="interesse">Intéressé</button>
+            <button class="pill" data-statut="inscrit">Inscrit</button>
+            <button class="pill" data-statut="perdu">Perdu</button>
+        </div>
+    </div>
+
+    <div class="prospect-list" id="prospect-list">
+        <!-- Les prospects sont injectés ici en JS -->
+    </div>
+
+</main>
+
+<!-- ---------- Modale d'ajout / modification ---------- -->
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="modal-title">Nouveau prospect</h2>
+            <button class="btn-icon" id="btn-close-modal">✕</button>
+        </div>
+
+        <form id="prospect-form">
+            <input type="hidden" id="prospect-id">
+
+            <div class="form-grid">
+                <div class="field">
+                    <label for="f-nom">Nom *</label>
+                    <input type="text" id="f-nom" required>
+                </div>
+                <div class="field">
+                    <label for="f-prenom">Prénom *</label>
+                    <input type="text" id="f-prenom" required>
+                </div>
+                <div class="field">
+                    <label for="f-telephone">Téléphone *</label>
+                    <input type="tel" id="f-telephone" required>
+                </div>
+                <div class="field">
+                    <label for="f-email">Email</label>
+                    <input type="email" id="f-email">
+                </div>
+                <div class="field">
+                    <label for="f-source">Source du contact</label>
+                    <input type="text" id="f-source" placeholder="Ami, marché, réseaux sociaux...">
+                </div>
+                <div class="field">
+                    <label for="f-statut">Statut</label>
+                    <select id="f-statut">
+                        <option value="nouveau">Nouveau</option>
+                        <option value="invite">Invité</option>
+                        <option value="presente">Présentation faite</option>
+                        <option value="interesse">Intéressé</option>
+                        <option value="inscrit">Inscrit</option>
+                        <option value="perdu">Perdu</option>
+                    </select>
+                </div>
+
+                <div class="field full">
+                    <div class="checkbox-field">
+                        <input type="checkbox" id="f-invitation-faite">
+                        <label for="f-invitation-faite">Invitation déjà faite</label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="f-date-invitation">Date de l'invitation</label>
+                    <input type="date" id="f-date-invitation">
+                </div>
+                <div class="field"></div>
+
+                <div class="field full">
+                    <div class="checkbox-field">
+                        <input type="checkbox" id="f-presentation-faite">
+                        <label for="f-presentation-faite">Présentation déjà effectuée</label>
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="f-date-presentation">Date de la présentation (prévue ou effectuée)</label>
+                    <input type="date" id="f-date-presentation">
+                    <small class="field-help">Indiquez la date si la présentation est prévue à une date ultérieure.</small>
+                </div>
+                <div class="field">
+                    <label for="f-date-inscription">Date d'inscription</label>
+                    <input type="date" id="f-date-inscription">
+                </div>
+
+                <div class="field">
+                    <label for="f-prochaine-relance">Prochaine relance</label>
+                    <input type="date" id="f-prochaine-relance">
+                </div>
+                <div class="field"></div>
+
+                <div class="field full">
+                    <label for="f-notes">Notes</label>
+                    <textarea id="f-notes" placeholder="Ce qui a été dit, ses objections, ses motivations..."></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" id="btn-cancel">Annuler</button>
+                <button type="submit" class="btn btn-primary" id="btn-submit">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ---------- Modale de confirmation custom ---------- -->
+<div class="modal-overlay" id="confirm-modal-overlay">
+    <div class="modal modal-sm">
+        <div class="modal-header">
+            <h2 id="confirm-modal-title">Confirmation</h2>
+            <button class="btn-icon" id="btn-close-confirm">✕</button>
+        </div>
+        <div class="modal-body" id="confirm-modal-text">
+            Êtes-vous sûr de vouloir effectuer cette action ?
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-ghost" id="btn-confirm-cancel">Annuler</button>
+            <button type="button" class="btn btn-danger" id="btn-confirm-ok">Supprimer</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="assets/js/app.js"></script>
+</body>
+</html>
