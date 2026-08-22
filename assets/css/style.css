@@ -1,88 +1,117 @@
 /* =========================================================
-   PALETTE & SYSTEME DE DESIGN
+   SUIVI PROSPECTS — PALETTE EAU & VERRE (GLASSMORPHISM)
+   Couleurs : Bleu Eau (#0284c7) & Orange Coucher de Soleil (#f97316)
    ========================================================= */
+
 :root {
-    --color-bg: #ffffff;            /* couleur principale : fond général */
-    --color-surface: #ffffff;       /* fond des cartes / panneaux */
-    --color-surface-alt: #f7f8f6;   /* fond léger pour zones secondaires */
-    --color-border: #e6e8e3;
-    --header-bg: rgba(255, 255, 255, 0.85);
+    /* Fond principal avec maillage liquide lumineux */
+    --color-bg-gradient: radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.25) 0%, transparent 40%),
+                         radial-gradient(circle at 90% 80%, rgba(249, 115, 22, 0.18) 0%, transparent 45%),
+                         linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 50%, #fff7ed 100%);
+    
+    --color-surface-glass: rgba(255, 255, 255, 0.68);
+    --color-surface-glass-alt: rgba(255, 255, 255, 0.45);
+    --color-border-glass: rgba(255, 255, 255, 0.7);
+    --header-glass: rgba(255, 255, 255, 0.75);
 
-    --color-text: #14181a;
-    --color-text-muted: #6b7280;
+    --color-text: #0f172a;
+    --color-text-muted: #64748b;
 
-    --color-accent: #0f6f52;        /* accent principal (boutons, liens actifs) */
-    --color-accent-dark: #0b5b43;
-    --color-accent-soft: #e7f3ee;
+    /* Accents principaux (Bleu Eau & Orange Vital) */
+    --color-accent-blue: #0284c7;
+    --color-accent-blue-dark: #0369a1;
+    --color-accent-blue-soft: rgba(2, 132, 199, 0.12);
+
+    --color-accent-orange: #f97316;
+    --color-accent-orange-dark: #ea580c;
+    --color-accent-orange-soft: rgba(249, 115, 22, 0.15);
 
     /* Couleurs de statut du pipeline */
-    --statut-nouveau: #6b7280;      --statut-nouveau-bg: #f2f3f5;
-    --statut-invite: #2563eb;       --statut-invite-bg: #eaf1ff;
-    --statut-presente: #d97706;     --statut-presente-bg: #fff6e8;
-    --statut-interesse: #7c3aed;    --statut-interesse-bg: #f4efff;
-    --statut-inscrit: #16a34a;      --statut-inscrit-bg: #eafbf0;
-    --statut-perdu: #dc2626;        --statut-perdu-bg: #fdecec;
+    --statut-nouveau: #64748b;      --statut-nouveau-bg: rgba(226, 232, 240, 0.7);
+    --statut-invite: #0284c7;       --statut-invite-bg: rgba(186, 230, 253, 0.7);
+    --statut-presente: #f97316;     --statut-presente-bg: rgba(254, 215, 170, 0.7);
+    --statut-interesse: #8b5cf6;    --statut-interesse-bg: rgba(221, 214, 254, 0.7);
+    --statut-inscrit: #10b981;      --statut-inscrit-bg: rgba(167, 243, 208, 0.7);
+    --statut-perdu: #ef4444;        --statut-perdu-bg: rgba(254, 202, 202, 0.7);
 
-    --radius: 10px;
-    --shadow: 0 1px 2px rgba(20, 24, 26, 0.04), 0 4px 16px rgba(20, 24, 26, 0.05);
+    --radius: 16px;
+    --radius-pill: 999px;
+    --glass-blur: blur(16px) saturate(180%);
+    --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
+    --shadow-hover: 0 12px 36px 0 rgba(2, 132, 199, 0.16);
+
     --font-heading: "Sora", system-ui, sans-serif;
     --font-body: "Inter", system-ui, sans-serif;
 }
 
 [data-theme="dark"] {
-    --color-bg: #0f172a;
-    --color-surface: #1e293b;
-    --color-surface-alt: #334155;
-    --color-border: #334155;
-    --header-bg: rgba(15, 23, 42, 0.85);
+    --color-bg-gradient: radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.18) 0%, transparent 40%),
+                         radial-gradient(circle at 85% 85%, rgba(249, 115, 22, 0.15) 0%, transparent 45%),
+                         linear-gradient(135deg, #090d16 0%, #0f172a 50%, #171226 100%);
+    
+    --color-surface-glass: rgba(15, 23, 42, 0.68);
+    --color-surface-glass-alt: rgba(30, 41, 59, 0.5);
+    --color-border-glass: rgba(255, 255, 255, 0.12);
+    --header-glass: rgba(15, 23, 42, 0.75);
 
     --color-text: #f8fafc;
     --color-text-muted: #94a3b8;
 
-    --color-accent: #10b981;
-    --color-accent-dark: #059669;
-    --color-accent-soft: rgba(16, 185, 129, 0.18);
+    --color-accent-blue: #38bdf8;
+    --color-accent-blue-dark: #0284c7;
+    --color-accent-blue-soft: rgba(56, 189, 248, 0.18);
 
-    --statut-nouveau: #94a3b8;      --statut-nouveau-bg: #334155;
-    --statut-invite: #60a5fa;       --statut-invite-bg: rgba(37, 99, 235, 0.25);
-    --statut-presente: #fbbf24;     --statut-presente-bg: rgba(217, 119, 6, 0.25);
-    --statut-interesse: #c084fc;    --statut-interesse-bg: rgba(124, 58, 237, 0.25);
-    --statut-inscrit: #4ade80;      --statut-inscrit-bg: rgba(22, 163, 74, 0.25);
-    --statut-perdu: #f87171;        --statut-perdu-bg: rgba(220, 38, 38, 0.25);
+    --color-accent-orange: #fb923c;
+    --color-accent-orange-dark: #f97316;
+    --color-accent-orange-soft: rgba(251, 146, 60, 0.2);
 
-    --shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+    --statut-nouveau: #94a3b8;      --statut-nouveau-bg: rgba(51, 65, 85, 0.7);
+    --statut-invite: #38bdf8;       --statut-invite-bg: rgba(3, 105, 161, 0.35);
+    --statut-presente: #fb923c;     --statut-presente-bg: rgba(194, 65, 12, 0.35);
+    --statut-interesse: #c084fc;    --statut-interesse-bg: rgba(109, 40, 217, 0.35);
+    --statut-inscrit: #34d399;      --statut-inscrit-bg: rgba(4, 120, 87, 0.35);
+    --statut-perdu: #f87171;        --statut-perdu-bg: rgba(185, 28, 28, 0.35);
+
+    --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    --shadow-hover: 0 12px 36px 0 rgba(0, 0, 0, 0.7);
 }
 
-* { box-sizing: border-box; }
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
 
 body {
     margin: 0;
-    background: var(--color-bg);
+    min-height: 100vh;
+    background: var(--color-bg-gradient);
+    background-attachment: fixed;
     color: var(--color-text);
     font-family: var(--font-body);
     font-size: 15px;
     line-height: 1.5;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: background 0.4s ease, color 0.4s ease;
 }
 
 h1, h2, h3, .brand, .btn, label, .stat-card .stat-value {
     font-family: var(--font-heading);
 }
 
-/* ---------- Layout général ---------- */
+/* ---------- Header Glassmorphism ---------- */
 .app-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 32px;
-    border-bottom: 1px solid var(--color-border);
-    background: var(--header-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--color-border-glass);
+    background: var(--header-glass);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     position: sticky;
     top: 0;
-    z-index: 10;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    z-index: 20;
+    box-shadow: var(--shadow-glass);
+    transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .brand {
@@ -90,21 +119,23 @@ h1, h2, h3, .brand, .btn, label, .stat-card .stat-value {
     align-items: center;
     gap: 10px;
     font-weight: 700;
-    font-size: 19px;
+    font-size: 18px;
+    color: var(--color-text);
 }
 
 .brand-mark {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0284c7 0%, #f97316 100%);
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
-    box-shadow: 0 2px 6px rgba(15, 111, 82, 0.3);
+    box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 .brand-sub {
@@ -122,78 +153,97 @@ h1, h2, h3, .brand, .btn, label, .stat-card .stat-value {
 }
 
 .theme-toggle-btn {
-    background: var(--color-surface-alt);
-    border: 1px solid var(--color-border);
+    background: var(--color-surface-glass-alt);
+    border: 1px solid var(--color-border-glass);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     color: var(--color-text);
     border-radius: 50%;
-    width: 38px;
-    height: 38px;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 18px;
     cursor: pointer;
-    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+    transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 .theme-toggle-btn:hover {
-    background: var(--color-border);
-    transform: scale(1.05);
+    transform: scale(1.08);
+    box-shadow: 0 6px 16px rgba(2, 132, 199, 0.25);
+}
+.theme-toggle-btn:active {
+    transform: scale(0.95);
 }
 
 main {
     max-width: 1180px;
     margin: 0 auto;
-    padding: 28px 32px 80px;
+    padding: 24px 24px 100px;
 }
 
-/* ---------- Statistiques ---------- */
+/* ---------- Statistiques Glassmorphism ---------- */
 .stats-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 16px;
-    margin-bottom: 28px;
+    margin-bottom: 24px;
 }
 
 .stat-card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
+    background: var(--color-surface-glass);
+    border: 1px solid var(--color-border-glass);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--radius);
-    padding: 16px 18px;
-    transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
-    animation: statPop 0.4s ease forwards;
+    padding: 16px 20px;
+    box-shadow: var(--shadow-glass);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    animation: statPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 .stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(2, 132, 199, 0.4);
 }
 
 @keyframes statPop {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
 .stat-card .stat-label {
-    font-size: 12.5px;
+    font-size: 12px;
     color: var(--color-text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
+    font-weight: 600;
 }
 
 .stat-card .stat-value {
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 700;
     margin-top: 4px;
+    background: linear-gradient(135deg, var(--color-accent-blue), var(--color-accent-blue-dark));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
-.stat-card.accent .stat-value { color: var(--color-accent); }
+.stat-card.accent .stat-value {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
 
 /* ---------- Barre d'outils ---------- */
 .toolbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 18px;
+    gap: 14px;
+    margin-bottom: 20px;
     flex-wrap: wrap;
 }
 
@@ -202,6 +252,7 @@ main {
     align-items: center;
     gap: 12px;
     flex-wrap: wrap;
+    flex: 1;
 }
 
 .toolbar-filters {
@@ -211,88 +262,405 @@ main {
 }
 
 .search-input, .sort-select, .filter-select {
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    padding: 9px 12px;
+    border: 1px solid var(--color-border-glass);
+    border-radius: 12px;
+    padding: 11px 14px;
     font-family: var(--font-body);
     font-size: 14px;
-    background: var(--color-surface);
+    background: var(--color-surface-glass);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     color: var(--color-text);
-    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.2s ease;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03), 0 2px 8px rgba(0,0,0,0.02);
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.2s ease;
+    min-height: 44px;
 }
 
 .search-input:focus, .sort-select:focus {
     outline: none;
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px var(--color-accent-soft);
+    border-color: var(--color-accent-blue);
+    box-shadow: 0 0 0 3px var(--color-accent-blue-soft), 0 4px 12px rgba(2, 132, 199, 0.15);
 }
 
-.search-input { min-width: 220px; }
+.search-input { min-width: 240px; flex: 1; }
 
+/* ---------- Boutons façon Eau (Liquid Water Buttons) ---------- */
 .btn {
-    border: none;
-    border-radius: 8px;
-    padding: 10px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
+    padding: 11px 18px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    transition: transform 0.05s ease, background 0.15s ease, box-shadow 0.2s ease;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
 }
-.btn:active { transform: scale(0.98); }
+.btn:active { transform: scale(0.96); }
 
+/* Bouton principal Orange Eau Sunset */
 .btn-primary {
-    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(15, 111, 82, 0.25);
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 .btn-primary:hover {
-    opacity: 0.95;
-    box-shadow: 0 4px 12px rgba(15, 111, 82, 0.35);
+    background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+    box-shadow: 0 6px 20px rgba(249, 115, 22, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+    transform: translateY(-1px);
 }
 
+/* Bouton Danger (Supprimer) */
 .btn-danger {
-    background: #dc2626;
-    color: #fff;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.4);
 }
 .btn-danger:hover {
-    background: #b91c1c;
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45);
+    transform: translateY(-1px);
 }
 
 .btn-ghost {
-    background: transparent;
+    background: var(--color-surface-glass-alt);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     color: var(--color-text);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-glass);
 }
-.btn-ghost:hover { background: var(--color-surface-alt); }
+.btn-ghost:hover {
+    background: var(--color-surface-glass);
+    border-color: var(--color-accent-blue);
+}
 
 .btn-icon {
-    background: transparent;
-    border: none;
+    background: var(--color-surface-glass);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--color-border-glass);
     cursor: pointer;
     color: var(--color-text-muted);
-    padding: 6px;
-    border-radius: 6px;
-    font-size: 15px;
-    transition: background 0.15s ease, color 0.15s ease;
+    padding: 8px;
+    border-radius: 10px;
+    font-size: 16px;
+    min-width: 40px;
+    min-height: 40px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease, border-color 0.2s ease;
     text-decoration: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
 }
-.btn-icon:hover { background: var(--color-surface-alt); color: var(--color-text); }
+.btn-icon:hover {
+    background: var(--color-surface-glass);
+    color: var(--color-text);
+    border-color: var(--color-accent-blue);
+    transform: translateY(-1px);
+}
+.btn-icon:active { transform: scale(0.94); }
+
+/* ---------- Filtres de statut (Pills Liquides) ---------- */
+.pill {
+    border: 1px solid var(--color-border-glass);
+    background: var(--color-surface-glass);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    padding: 9px 16px;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+}
+.pill:hover {
+    border-color: var(--color-accent-blue);
+    color: var(--color-accent-blue);
+    transform: translateY(-1px);
+}
+.pill.active {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+}
+[data-theme="dark"] .pill.active {
+    background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+    color: #0f172a;
+    font-weight: 700;
+}
+
+/* ---------- Liste des prospects ---------- */
+.prospect-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 64px 24px;
+    color: var(--color-text-muted);
+    border: 1.5px dashed var(--color-border-glass);
+    border-radius: var(--radius);
+    background: var(--color-surface-glass);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--shadow-glass);
+}
+.empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; display: block; }
+.empty-state strong { display: block; color: var(--color-text); margin-bottom: 6px; font-size: 17px; }
+
+/* Séparateur méta */
+.meta-sep { margin: 0 4px; color: var(--color-border-glass); }
+
+/* Zone badges */
+.prospect-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 7px;
+}
+
+/* Badges Glassmorphism Pills */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    letter-spacing: 0.01em;
+}
+
+.badge-overdue {
+    background-color: var(--statut-perdu-bg);
+    color: var(--statut-perdu);
+    border-color: rgba(239, 68, 68, 0.4);
+    animation: pulseOverdue 2s infinite;
+}
+
+.badge-relance-ok {
+    background-color: var(--statut-invite-bg);
+    color: var(--statut-invite);
+    border-color: rgba(2, 132, 199, 0.3);
+}
+
+.badge-presentation-prevue {
+    background-color: var(--statut-invite-bg);
+    color: var(--statut-invite);
+    border-color: rgba(2, 132, 199, 0.4);
+}
+
+.badge-presentation-faite {
+    background-color: var(--statut-inscrit-bg);
+    color: var(--statut-inscrit);
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
+/* Label "Perdu" pipeline */
+.pipeline-label.lost {
+    color: var(--statut-perdu);
+    font-weight: 600;
+}
+
+/* Bouton supprimer */
+.btn-delete:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--statut-perdu);
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Cards de prospects - Glassmorphism avec hover elevation */
+.prospect-card {
+    background: var(--color-surface-glass);
+    border: 1px solid var(--color-border-glass);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    display: grid;
+    grid-template-columns: 1.4fr 1.5fr auto auto;
+    align-items: center;
+    gap: 20px;
+    box-shadow: var(--shadow-glass);
+    transition: background 0.3s ease, border-color 0.3s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+    animation: fadeSlideIn 0.35s ease forwards;
+    animation-delay: calc(var(--i, 0) * 0.04s);
+    opacity: 0;
+}
+
+.prospect-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+    border-color: rgba(2, 132, 199, 0.4);
+}
+
+@keyframes fadeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.prospect-identity .prospect-name {
+    font-weight: 700;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    color: var(--color-text);
+}
+
+.prospect-identity .prospect-meta {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin-top: 4px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* Badges relances et présentations */
+.badge-relance {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    margin-top: 6px;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+}
+
+.badge-overdue {
+    background-color: var(--statut-perdu-bg);
+    color: var(--statut-perdu);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    animation: pulseOverdue 2s infinite;
+}
+
+.badge-presentation-prevue {
+    background-color: var(--statut-invite-bg);
+    color: var(--statut-invite);
+    border: 1px solid rgba(2, 132, 199, 0.4);
+}
+
+.badge-presentation-faite {
+    background-color: var(--statut-inscrit-bg);
+    color: var(--statut-inscrit);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+@keyframes pulseOverdue {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Stepper Pipeline */
+.pipeline {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.pipeline .step {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-border-glass);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    flex-shrink: 0;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+.pipeline .step.done { background: var(--color-accent-blue); }
+.pipeline .step.current {
+    background: var(--color-accent-orange);
+    box-shadow: 0 0 0 3px var(--color-accent-orange-soft);
+}
+.pipeline .bar {
+    width: 22px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--color-border-glass);
+    transition: background 0.3s ease;
+}
+.pipeline .bar.done { background: var(--color-accent-blue); }
+.pipeline-label {
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-top: 6px;
+    font-weight: 500;
+}
+
+.status-select {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--radius-pill);
+    padding: 8px 14px;
+    font-size: 12.5px;
+    font-weight: 700;
+    font-family: var(--font-body);
+    cursor: pointer;
+    appearance: none;
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: background 0.3s ease, color 0.3s ease, transform 0.15s ease;
+    min-height: 38px;
+}
+.status-select:hover { transform: scale(1.02); }
+
+.status-select.nouveau   { background-color: var(--statut-nouveau-bg);   color: var(--statut-nouveau); }
+.status-select.invite    { background-color: var(--statut-invite-bg);    color: var(--statut-invite); }
+.status-select.presente  { background-color: var(--statut-presente-bg);  color: var(--statut-presente); }
+.status-select.interesse { background-color: var(--statut-interesse-bg); color: var(--statut-interesse); }
+.status-select.inscrit   { background-color: var(--statut-inscrit-bg);   color: var(--statut-inscrit); }
+.status-select.perdu     { background-color: var(--statut-perdu-bg);     color: var(--statut-perdu); }
+
+.prospect-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
 
 .btn-whatsapp {
     color: #25D366;
+    background: rgba(37, 211, 102, 0.12);
+    border-color: rgba(37, 211, 102, 0.3);
 }
 .btn-whatsapp:hover {
-    background: rgba(37, 211, 102, 0.15);
+    background: rgba(37, 211, 102, 0.25);
     color: #128C7E;
+    border-color: rgba(37, 211, 102, 0.5);
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
 }
 [data-theme="dark"] .btn-whatsapp:hover {
-    background: rgba(37, 211, 102, 0.25);
     color: #25D366;
 }
 
@@ -306,242 +674,40 @@ main {
     text-decoration: underline;
 }
 
-/* ---------- Filtres de statut (pills) ---------- */
-.pill {
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    padding: 7px 13px;
-    border-radius: 999px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    color: var(--color-text-muted);
-    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
-}
-.pill:hover {
-    border-color: var(--color-accent);
-}
-.pill.active {
-    background: var(--color-accent-soft);
-    border-color: var(--color-accent);
-    color: var(--color-accent-dark);
-}
-[data-theme="dark"] .pill.active {
-    color: #34d399;
-}
-
-/* ---------- Liste des prospects ---------- */
-.prospect-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--color-text-muted);
-    border: 1px dashed var(--color-border);
-    border-radius: var(--radius);
-    background: var(--color-surface);
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-.empty-state strong { display: block; color: var(--color-text); margin-bottom: 4px; font-size: 16px; }
-
-.prospect-card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    padding: 16px 18px;
-    display: grid;
-    grid-template-columns: 1.4fr 1.6fr auto auto;
-    align-items: center;
-    gap: 18px;
-    box-shadow: var(--shadow);
-    transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
-    animation: fadeSlideIn 0.35s ease forwards;
-    animation-delay: calc(var(--i, 0) * 0.04s);
-    opacity: 0;
-}
-
-.prospect-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-[data-theme="dark"] .prospect-card:hover {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-}
-
-@keyframes fadeSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.prospect-identity .prospect-name {
-    font-weight: 700;
-    font-size: 15.5px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.prospect-identity .prospect-meta {
-    font-size: 13px;
-    color: var(--color-text-muted);
-    margin-top: 4px;
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-/* Badge relance en retard */
-.badge-relance {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11.5px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 6px;
-    margin-top: 4px;
-}
-
-.badge-overdue {
-    background-color: var(--statut-perdu-bg);
-    color: var(--statut-perdu);
-    border: 1px solid rgba(220, 38, 38, 0.3);
-    animation: pulseOverdue 2s infinite;
-}
-
-.badge-presentation-prevue {
-    background-color: var(--statut-invite-bg);
-    color: var(--statut-invite);
-    border: 1px solid rgba(37, 99, 235, 0.3);
-}
-
-.badge-presentation-faite {
-    background-color: var(--statut-inscrit-bg);
-    color: var(--statut-inscrit);
-    border: 1px solid rgba(22, 163, 74, 0.3);
-}
-
-.field-help {
-    font-size: 11.5px;
-    color: var(--color-text-muted);
-    margin-top: 4px;
-    display: block;
-    line-height: 1.3;
-}
-
-@keyframes pulseOverdue {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.75; }
-}
-
-/* Pipeline / stepper : représente la progression réelle du prospect */
-.pipeline {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-.pipeline .step {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--color-border);
-    flex-shrink: 0;
-    transition: background-color 0.3s ease;
-}
-.pipeline .step.done { background: var(--color-accent); }
-.pipeline .step.current {
-    background: var(--color-accent);
-    box-shadow: 0 0 0 3px var(--color-accent-soft);
-}
-.pipeline .bar {
-    width: 20px;
-    height: 2px;
-    background: var(--color-border);
-    transition: background-color 0.3s ease;
-}
-.pipeline .bar.done { background: var(--color-accent); }
-.pipeline-label {
-    font-size: 12px;
-    color: var(--color-text-muted);
-    margin-top: 5px;
-}
-
-.status-select {
-    border: 1px solid transparent;
-    border-radius: 999px;
-    padding: 6px 10px 6px 11px;
-    font-size: 12.5px;
-    font-weight: 700;
-    font-family: var(--font-body);
-    cursor: pointer;
-    appearance: none;
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-.status-select.nouveau   { background-color: var(--statut-nouveau-bg);   color: var(--statut-nouveau); }
-.status-select.invite    { background-color: var(--statut-invite-bg);    color: var(--statut-invite); }
-.status-select.presente  { background-color: var(--statut-presente-bg);  color: var(--statut-presente); }
-.status-select.interesse { background-color: var(--statut-interesse-bg); color: var(--statut-interesse); }
-.status-select.inscrit   { background-color: var(--statut-inscrit-bg);   color: var(--statut-inscrit); }
-.status-select.perdu     { background-color: var(--statut-perdu-bg);     color: var(--statut-perdu); }
-
-.prospect-actions {
-    display: flex;
-    gap: 4px;
-}
-
-/* ---------- Modale ---------- */
+/* ---------- Modale Glassmorphism & Bottom Sheet Mobile ---------- */
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     display: none;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
-    padding: 40px 16px;
+    padding: 24px 16px;
     z-index: 50;
     overflow-y: auto;
-    animation: fadeInOverlay 0.2s ease forwards;
 }
 .modal-overlay.open { display: flex; }
 
-@keyframes fadeInOverlay {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
 .modal {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: 14px;
-    padding: 26px 28px 28px;
+    background: var(--color-surface-glass);
+    border: 1px solid var(--color-border-glass);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: 24px;
+    padding: 28px 30px;
     width: 100%;
-    max-width: 560px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-    animation: popModal 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    max-width: 580px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+    transition: background 0.3s ease, border-color 0.3s ease;
+    animation: popModal 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.modal-sm {
-    max-width: 440px;
-}
+.modal-sm { max-width: 440px; }
 
 @keyframes popModal {
-    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    from { opacity: 0; transform: scale(0.92) translateY(20px); }
     to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
@@ -549,29 +715,29 @@ main {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 18px;
+    margin-bottom: 20px;
 }
-.modal-header h2 { margin: 0; font-size: 19px; }
+.modal-header h2 { margin: 0; font-size: 20px; color: var(--color-text); }
 
 .modal-body {
     color: var(--color-text-muted);
-    font-size: 14.5px;
-    margin-bottom: 20px;
+    font-size: 15px;
+    margin-bottom: 22px;
     line-height: 1.5;
 }
 
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 14px;
+    gap: 16px;
 }
 .form-grid .full { grid-column: 1 / -1; }
 
 .field label {
     display: block;
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 600;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
     color: var(--color-text-muted);
 }
 
@@ -582,67 +748,178 @@ main {
 .field select,
 .field textarea {
     width: 100%;
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    padding: 9px 11px;
+    border: 1px solid var(--color-border-glass);
+    border-radius: 12px;
+    padding: 11px 14px;
     font-family: var(--font-body);
     font-size: 14px;
-    background: var(--color-surface);
+    background: var(--color-surface-glass);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     color: var(--color-text);
-    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    min-height: 44px;
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.2s ease;
 }
 .field input:focus, .field select:focus, .field textarea:focus {
     outline: none;
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px var(--color-accent-soft);
+    border-color: var(--color-accent-blue);
+    box-shadow: 0 0 0 3px var(--color-accent-blue-soft), 0 4px 12px rgba(2, 132, 199, 0.15);
 }
 
-.field textarea { resize: vertical; min-height: 64px; }
+.field textarea { resize: vertical; min-height: 72px; }
+
+.field-help {
+    font-size: 11.5px;
+    color: var(--color-text-muted);
+    margin-top: 4px;
+    display: block;
+    line-height: 1.3;
+}
 
 .checkbox-field {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     margin-top: 4px;
 }
-.checkbox-field input { width: 16px; height: 16px; accent-color: var(--color-accent); }
-.checkbox-field label { margin: 0; font-size: 13.5px; color: var(--color-text); font-weight: 500; }
+.checkbox-field input { width: 18px; height: 18px; accent-color: var(--color-accent-orange); }
+.checkbox-field label { margin: 0; font-size: 14px; color: var(--color-text); font-weight: 500; cursor: pointer; }
 
 .modal-footer {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
-    margin-top: 22px;
+    gap: 12px;
+    margin-top: 24px;
 }
 
+/* Toast Notification Glassmorphism */
 .toast {
     position: fixed;
-    bottom: 24px;
+    bottom: 30px;
     left: 50%;
-    transform: translateX(-50%) translateY(10px);
-    background: var(--color-text);
-    color: var(--color-bg);
-    padding: 12px 18px;
-    border-radius: 8px;
+    transform: translateX(-50%) translateY(14px);
+    background: var(--color-surface-glass);
+    border: 1px solid var(--color-border-glass);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    color: var(--color-text);
+    padding: 14px 22px;
+    border-radius: var(--radius-pill);
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    transition: opacity 0.25s ease, transform 0.25s ease;
     z-index: 100;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-.toast.error { background: var(--statut-perdu); color: #ffffff; }
+.toast.error {
+    background: rgba(239, 68, 68, 0.9);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.4);
+}
 
-/* ---------- Responsive ---------- */
+/* Bouton Flottant Mobile FAB (Liquid Water Orange) */
+.mobile-fab {
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    right: 20px;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    font-size: 32px;
+    font-weight: 300;
+    line-height: 1;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(249, 115, 22, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+    z-index: 45;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.mobile-fab:active { transform: scale(0.92); }
+
+/* =========================================================
+   RESPONSIVITÉ MOBILE AVANCÉE (OPTIMISÉE MOBILE / APK)
+   ========================================================= */
+
 @media (max-width: 860px) {
-    .stats-row { grid-template-columns: repeat(2, 1fr); }
-    .prospect-card { grid-template-columns: 1fr; align-items: flex-start; }
-    .pipeline-wrap { order: 3; }
-    main { padding: 20px 16px 60px; }
-    .app-header { padding: 16px 18px; }
-    .form-grid { grid-template-columns: 1fr; }
+    .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .prospect-card {
+        grid-template-columns: 1fr;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 16px;
+    }
+
+    .pipeline-wrap { order: 3; width: 100%; }
+
+    .prospect-actions {
+        order: 4;
+        width: 100%;
+        justify-content: flex-end;
+        border-top: 1px dashed var(--color-border-glass);
+        padding-top: 10px;
+        margin-top: 4px;
+    }
+
+    .status-select {
+        order: 2;
+        width: 100%;
+    }
+
+    main { padding: 16px 16px 90px; }
+    .app-header { padding: 14px 16px; }
+
+    .toolbar-filters {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 6px;
+        width: 100%;
+        scrollbar-width: none;
+    }
+    .toolbar-filters::-webkit-scrollbar { display: none; }
+
     .toolbar-controls { width: 100%; }
-    .search-input { flex: 1; }
+    .search-input, .sort-select { width: 100%; }
+
+    /* Mobile FAB visible */
+    .mobile-fab { display: flex; }
+}
+
+@media (max-width: 640px) {
+    /* Bottom Sheet pour les modales sur téléphone */
+    .modal-overlay {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .modal {
+        border-radius: 24px 24px 0 0;
+        max-height: 92vh;
+        overflow-y: auto;
+        padding: 24px 20px 32px;
+        animation: slideUpSheet 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes slideUpSheet {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+
+    .form-grid { grid-template-columns: 1fr; gap: 12px; }
+
+    .brand-sub { display: none; }
+
+    /* Masquer le bouton entête d'ajout pour utiliser le FAB flottant */
+    #btn-open-add { display: none; }
 }
