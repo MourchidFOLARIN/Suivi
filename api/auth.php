@@ -52,7 +52,7 @@ if ($method === 'POST') {
                 ]
             ], 201);
         } catch (Exception $e) {
-            respond(['success' => false, 'message' => 'Erreur lors de l\'inscription.'], 500);
+            respond(['success' => false, 'message' => 'Erreur lors de l\'inscription: ' . $e->getMessage()], 500);
         }
     }
 
