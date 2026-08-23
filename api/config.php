@@ -317,15 +317,29 @@ function repairPostgresUserTable(PDO $pdo): void
         $pdo->exec("ALTER TABLE users ADD PRIMARY KEY (id)");
     }
 
+    if (in_array('name', $columnNames, true) && !in_array('nom', $columnNames, true)) {
+        $pdo->exec("ALTER TABLE users RENAME COLUMN name TO nom");
+        $columnNames = array_values(array_map(static fn($item) => $item['column_name'], $pdo->query("SELECT column_name FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'users' ORDER BY ordinal_position")->fetchAll()));
+    }
+
+    if (in_array('nom', $columnNames, true) && in_array('name', $columnNames, true)) {
+        $pdo->exec("UPDATE users SET nom = COALESCE(nom, name) WHERE nom IS NULL AND name IS NOT NULL");
+    }
+
     foreach (['nom', 'email', 'mot_de_passe'] as $column) {
         if (!in_array($column, $columnNames, true)) {
             $pdo->exec("ALTER TABLE users ADD COLUMN {$column} VARCHAR(255)");
         }
     }
 
+    $pdo->exec("UPDATE users SET nom = COALESCE(nom, 'Utilisateur') WHERE nom IS NULL OR nom = ''");
     $pdo->exec("ALTER TABLE users ALTER COLUMN nom SET NOT NULL");
     $pdo->exec("ALTER TABLE users ALTER COLUMN email SET NOT NULL");
     $pdo->exec("ALTER TABLE users ALTER COLUMN mot_de_passe SET NOT NULL");
+
+    if (in_array('name', $columnNames, true)) {
+        $pdo->exec("ALTER TABLE users DROP COLUMN IF EXISTS name");
+    }
 
     $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS users_email_unique_idx ON users (LOWER(email))");
 }
