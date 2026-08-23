@@ -774,7 +774,18 @@ function formaterDate(dateStr) {
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
-            .then((reg) => console.log('Service Worker PWA enregistré:', reg.scope))
+            .then((reg) => {
+                console.log('Service Worker PWA enregistré:', reg.scope);
+                reg.addEventListener('updatefound', () => {
+                    const installing = reg.installing;
+                    if (!installing) return;
+                    installing.addEventListener('statechange', () => {
+                        if (installing.state === 'activated') {
+                            window.location.reload();
+                        }
+                    });
+                });
+            })
             .catch((err) => console.error('Erreur Service Worker PWA:', err));
     });
 }
