@@ -53,6 +53,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const btnExport = document.getElementById('btn-export-csv');
+    if (btnExport) {
+        btnExport.addEventListener('click', exporterCSV);
+    }
+
     document.querySelectorAll('#status-filters .pill').forEach(pill => {
         pill.addEventListener('click', () => {
             document.querySelectorAll('#status-filters .pill').forEach(p => p.classList.remove('active'));
@@ -367,7 +372,9 @@ async function chargerStats() {
 
 async function chargerProspects() {
     const params = new URLSearchParams();
-    if (currentFilter) params.set('statut', currentFilter);
+    if (currentFilter && currentFilter !== 'relance_du_jour') {
+        params.set('statut', currentFilter);
+    }
     if (currentSearch) params.set('recherche', currentSearch);
 
     try {
@@ -388,10 +395,27 @@ async function chargerProspects() {
 }
 
 function trierEtAfficherProspects() {
-    const prospects = [...currentProspectsData];
+    let prospects = [...currentProspectsData];
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    if (currentFilter === 'relance_du_jour') {
+        prospects = prospects.filter(p => {
+            if (!p.prochaine_relance) return false;
+            if (p.statut === 'inscrit' || p.statut === 'perdu') return false;
+            return p.prochaine_relance <= todayStr;
+        });
+    }
 
     prospects.sort((a, b) => {
-        if (currentSort === 'nom_asc') {
+        if (currentSort === 'relance_urgente') {
+            const scoreA = getRelancePriorityScore(a, todayStr);
+            const scoreB = getRelancePriorityScore(b, todayStr);
+            if (scoreA !== scoreB) return scoreA - scoreB;
+            if (a.prochaine_relance && b.prochaine_relance) {
+                return a.prochaine_relance.localeCompare(b.prochaine_relance);
+            }
+            return Number(b.id) - Number(a.id);
+        } else if (currentSort === 'nom_asc') {
             return `${a.nom || ''} ${a.prenom || ''}`.toLowerCase()
                 .localeCompare(`${b.nom || ''} ${b.prenom || ''}`.toLowerCase(), 'fr');
         } else if (currentSort === 'relance_asc') {
@@ -408,6 +432,71 @@ function trierEtAfficherProspects() {
     });
 
     afficherProspects(prospects);
+}
+
+function getRelancePriorityScore(p, todayStr) {
+    if (!p.prochaine_relance || p.statut === 'inscrit' || p.statut === 'perdu') return 4;
+    if (p.prochaine_relance < todayStr) return 1; // En retard (Urgent)
+    if (p.prochaine_relance === todayStr) return 2; // Aujourd'hui
+    return 3; // Relances futures
+}
+
+function exporterCSV() {
+    if (!currentProspectsData || currentProspectsData.length === 0) {
+        afficherToast('Aucun prospect à exporter.', true);
+        return;
+    }
+
+    const headers = [
+        'ID',
+        'Nom',
+        'Prénom',
+        'Téléphone',
+        'Email',
+        'Source',
+        'Statut',
+        'Invitation Faite',
+        'Date Invitation',
+        'Présentation Faite',
+        'Date Présentation',
+        'Date Inscription',
+        'Prochaine Relance',
+        'Notes',
+        'Date Ajout'
+    ];
+
+    const rows = currentProspectsData.map(p => [
+        p.id,
+        `"${(p.nom || '').replace(/"/g, '""')}"`,
+        `"${(p.prenom || '').replace(/"/g, '""')}"`,
+        `"${(p.telephone || '').replace(/"/g, '""')}"`,
+        `"${(p.email || '').replace(/"/g, '""')}"`,
+        `"${(p.source || '').replace(/"/g, '""')}"`,
+        `"${STATUTS[p.statut]?.label || p.statut}"`,
+        Number(p.invitation_faite) ? 'Oui' : 'Non',
+        p.date_invitation || '',
+        Number(p.presentation_faite) ? 'Oui' : 'Non',
+        p.date_presentation || '',
+        p.date_inscription || '',
+        p.prochaine_relance || '',
+        `"${(p.notes || '').replace(/"/g, '""').replace(/\r?\n/g, ' ')}"`,
+        p.date_ajout || ''
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    link.setAttribute('href', url);
+    link.setAttribute('download', `prospects_export_${todayStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    afficherToast('Export CSV téléchargé ! 📥');
 }
 
 async function supprimerProspect(id) {

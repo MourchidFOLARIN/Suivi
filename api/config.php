@@ -11,8 +11,9 @@
  */
 
 if (session_status() === PHP_SESSION_NONE) {
-    // Configuration sécurisée des cookies de session
-    $secure = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+    // Configuration sécurisée des cookies de session (avec support reverse-proxy HTTPS)
+    $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+              (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
     session_start([
         'cookie_lifetime' => 0,
         'cookie_path'     => '/',

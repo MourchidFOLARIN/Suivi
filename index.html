@@ -105,12 +105,15 @@
             <input type="text" class="search-input" id="search-input" placeholder="Rechercher un nom, prénom ou téléphone...">
             <select class="sort-select" id="sort-select" aria-label="Trier la liste">
                 <option value="date_desc">Trier par : Date d'ajout (récent)</option>
+                <option value="relance_urgente">🚨 Relances urgentes & du jour d'abord</option>
                 <option value="nom_asc">Trier par : Nom (A-Z)</option>
-                <option value="relance_asc">Trier par : Prochaine relance</option>
+                <option value="relance_asc">Trier par : Prochaine relance (chronologique)</option>
             </select>
+            <button class="btn btn-ghost" id="btn-export-csv" title="Exporter la liste sous format CSV / Excel">📥 Exporter (CSV)</button>
         </div>
         <div class="toolbar-filters" id="status-filters">
             <button class="pill active" data-statut="">Tous</button>
+            <button class="pill pill-alert" data-statut="relance_du_jour" title="Relances en retard ou prévues aujourd'hui">⚠️ Relances à faire</button>
             <button class="pill" data-statut="nouveau">Nouveau</button>
             <button class="pill" data-statut="invite">Invité</button>
             <button class="pill" data-statut="presente">Présentation faite</button>
@@ -233,6 +236,7 @@
             <button type="button" class="btn btn-danger" id="btn-confirm-ok">Supprimer</button>
         </div>
     </div>
+</div>
 <!-- ---------- Modale d'Onboarding / Prise en main ---------- -->
 <div class="modal-overlay" id="onboarding-modal-overlay">
     <div class="modal modal-onboarding">

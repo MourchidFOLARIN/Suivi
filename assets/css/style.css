@@ -415,6 +415,20 @@ main {
     font-weight: 700;
 }
 
+.pill-alert {
+    border-color: rgba(249, 115, 22, 0.4);
+    color: var(--color-accent-orange);
+}
+.pill-alert:hover {
+    border-color: var(--color-accent-orange);
+    color: var(--color-accent-orange-dark);
+}
+.pill-alert.active {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
+}
+
 /* ---------- Liste des prospects ---------- */
 .prospect-list {
     display: flex;

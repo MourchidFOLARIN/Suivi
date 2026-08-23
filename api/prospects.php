@@ -15,18 +15,20 @@ switch ($method) {
     // ---------- LECTURE ----------
     case 'GET':
         if ($action === 'stats') {
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM prospects WHERE user_id = ?");
+            $stmt = $pdo->prepare("
+                SELECT 
+                    COUNT(*) as total,
+                    COALESCE(SUM(CASE WHEN statut = 'inscrit' THEN 1 ELSE 0 END), 0) as inscrits,
+                    COALESCE(SUM(CASE WHEN statut = 'perdu' THEN 1 ELSE 0 END), 0) as perdus
+                FROM prospects 
+                WHERE user_id = ?
+            ");
             $stmt->execute([$userId]);
-            $total = $stmt->fetchColumn();
+            $row = $stmt->fetch();
 
-            $stmtInscrits = $pdo->prepare("SELECT COUNT(*) FROM prospects WHERE user_id = ? AND statut = 'inscrit'");
-            $stmtInscrits->execute([$userId]);
-            $inscrits = $stmtInscrits->fetchColumn();
-
-            $stmtPerdus = $pdo->prepare("SELECT COUNT(*) FROM prospects WHERE user_id = ? AND statut = 'perdu'");
-            $stmtPerdus->execute([$userId]);
-            $perdus = $stmtPerdus->fetchColumn();
-
+            $total = (int)($row['total'] ?? 0);
+            $inscrits = (int)($row['inscrits'] ?? 0);
+            $perdus = (int)($row['perdus'] ?? 0);
             $en_cours = $total - $inscrits - $perdus;
             $taux_conversion = $total > 0 ? round(($inscrits / $total) * 100, 1) : 0;
 
@@ -90,15 +92,21 @@ switch ($method) {
             respond(['success' => false, 'message' => 'Statut invalide.'], 422);
         }
 
-        $stmt = $pdo->prepare("
+        $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $sql = "
             INSERT INTO prospects
                 (user_id, nom, prenom, telephone, email, source, statut, invitation_faite, date_invitation,
                  presentation_faite, date_presentation, date_inscription, prochaine_relance, notes)
             VALUES
                 (:user_id, :nom, :prenom, :telephone, :email, :source, :statut, :invitation_faite, :date_invitation,
                  :presentation_faite, :date_presentation, :date_inscription, :prochaine_relance, :notes)
-        ");
+        ";
 
+        if ($driver === 'pgsql') {
+            $sql .= " RETURNING id";
+        }
+
+        $stmt = $pdo->prepare($sql);
         $stmt->execute([
             'user_id' => $userId,
             'nom' => $data['nom'],
@@ -116,9 +124,12 @@ switch ($method) {
             'notes' => $data['notes'] ?? null,
         ]);
 
-        $lastId = ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'pgsql')
-            ? $pdo->lastInsertId('prospects_id_seq')
-            : $pdo->lastInsertId();
+        if ($driver === 'pgsql') {
+            $row = $stmt->fetch();
+            $lastId = (int) $row['id'];
+        } else {
+            $lastId = (int) $pdo->lastInsertId();
+        }
 
         respond(['success' => true, 'message' => 'Prospect ajouté.', 'id' => $lastId], 201);
         break;
@@ -131,6 +142,13 @@ switch ($method) {
             respond(['success' => false, 'message' => 'Identifiant manquant.'], 422);
         }
 
+        // Vérifier d'abord si le prospect existe et appartient à cet utilisateur
+        $checkStmt = $pdo->prepare("SELECT id FROM prospects WHERE id = ? AND user_id = ?");
+        $checkStmt->execute([$data['id'], $userId]);
+        if (!$checkStmt->fetch()) {
+            respond(['success' => false, 'message' => 'Prospect introuvable ou non autorisé.'], 403);
+        }
+
         // Mise à jour rapide du statut
         if (isset($data['statut']) && !isset($data['nom'])) {
             if (!in_array($data['statut'], $validStatuts, true)) {
@@ -138,11 +156,7 @@ switch ($method) {
             }
             $stmt = $pdo->prepare("UPDATE prospects SET statut = ?, date_maj = NOW() WHERE id = ? AND user_id = ?");
             $stmt->execute([$data['statut'], $data['id'], $userId]);
-            if ($stmt->rowCount() > 0) {
-                respond(['success' => true, 'message' => 'Statut mis à jour.']);
-            } else {
-                respond(['success' => false, 'message' => 'Prospect introuvable ou non autorisé.'], 403);
-            }
+            respond(['success' => true, 'message' => 'Statut mis à jour.']);
         }
 
         if (empty($data['nom']) || empty($data['prenom']) || empty($data['telephone'])) {
@@ -191,11 +205,7 @@ switch ($method) {
             'notes' => $data['notes'] ?? null,
         ]);
 
-        if ($stmt->rowCount() > 0) {
-            respond(['success' => true, 'message' => 'Prospect mis à jour.']);
-        } else {
-            respond(['success' => false, 'message' => 'Aucune modification effectuée ou accès refusé.']);
-        }
+        respond(['success' => true, 'message' => 'Prospect mis à jour.']);
         break;
 
     // ---------- SUPPRESSION ----------
