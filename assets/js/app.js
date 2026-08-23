@@ -183,6 +183,13 @@ function initAuthUI() {
             const email = document.getElementById('register-email').value.trim();
             const mot_de_passe = document.getElementById('register-password').value;
 
+            const btn = formRegister.querySelector('button[type="submit"]');
+            const originalText = btn.textContent;
+
+            // État de chargement : désactiver le bouton + afficher un spinner
+            btn.disabled = true;
+            btn.textContent = '⏳ Création en cours...';
+
             try {
                 const res = await fetch(`${AUTH_URL}?action=register`, {
                     method: 'POST',
@@ -192,13 +199,17 @@ function initAuthUI() {
                 const json = await res.json();
                 if (json.success) {
                     currentUser = json.user;
-                    afficherToast('Compte créé avec succès !');
+                    afficherToast('Compte créé avec succès ! 🎉');
                     afficherAppConnectee();
                 } else {
                     afficherToast(json.message || 'Erreur lors de l\'inscription.', true);
+                    btn.disabled = false;
+                    btn.textContent = originalText;
                 }
             } catch (err) {
-                afficherToast('Erreur lors de l\'inscription.', true);
+                afficherToast('Erreur réseau. Vérifie ta connexion et réessaie.', true);
+                btn.disabled = false;
+                btn.textContent = originalText;
             }
         });
     }

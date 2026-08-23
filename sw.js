@@ -1,4 +1,4 @@
-const CACHE_NAME = 'suivi-prospects-v1';
+const CACHE_NAME = 'suivi-prospects-v2';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -34,10 +34,18 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Interception des requêtes (Network First pour l'API, Cache First pour les assets)
+// Interception des requêtes
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
+    // ── Requêtes POST : jamais de cache, toujours le réseau (Network Only)
+    // Évite que le SW retourne undefined sur une requête POST non cachée
+    if (event.request.method === 'POST') {
+        event.respondWith(fetch(event.request));
+        return;
+    }
+
+    // ── Requêtes GET vers l'API : Network First (données fraîches, fallback cache)
     if (url.pathname.includes('/api/')) {
         event.respondWith(
             fetch(event.request).catch(() => caches.match(event.request))
@@ -45,6 +53,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
+    // ── Assets statiques : Cache First puis mise à jour en arrière-plan (Stale While Revalidate)
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
             const fetchPromise = fetch(event.request).then((networkResponse) => {
