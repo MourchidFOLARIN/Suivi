@@ -11,7 +11,15 @@
  */
 
 if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+    // Configuration sécurisée des cookies de session
+    $secure = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+    session_start([
+        'cookie_lifetime' => 0,
+        'cookie_path'     => '/',
+        'cookie_secure'   => $secure,
+        'cookie_httponly' => true,
+        'cookie_samesite' => 'Lax',
+    ]);
 }
 
 define('LOCAL_DB_HOST', 'localhost');
@@ -20,7 +28,9 @@ define('LOCAL_DB_USER', 'root');
 define('LOCAL_DB_PASS', '');
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
+if (isset($_SERVER['HTTP_ORIGIN'])) {
+    header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
+}
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Access-Control-Allow-Credentials: true');
@@ -56,7 +66,10 @@ function getPDO(): PDO
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             ]);
 
-            initDatabaseIfNeeded($pdo, 'pgsql');
+            if (empty($_SESSION['db_initialized'])) {
+                initDatabaseIfNeeded($pdo, 'pgsql');
+                $_SESSION['db_initialized'] = true;
+            }
         } else {
             // ── Mode Local (MySQL / XAMPP) ─────────────────────────
             $dsn = 'mysql:host=' . LOCAL_DB_HOST . ';dbname=' . LOCAL_DB_NAME . ';charset=utf8mb4';
@@ -65,7 +78,10 @@ function getPDO(): PDO
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             ]);
 
-            initDatabaseIfNeeded($pdo, 'mysql');
+            if (empty($_SESSION['db_initialized'])) {
+                initDatabaseIfNeeded($pdo, 'mysql');
+                $_SESSION['db_initialized'] = true;
+            }
         }
 
         return $pdo;

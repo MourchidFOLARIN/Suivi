@@ -908,6 +908,191 @@ main {
     .mobile-fab { display: flex; }
 }
 
+/* =========================================================
+   ÉCRAN D'AUTHENTIFICATION (GLASSMORPHISM PREMIUM)
+   ========================================================= */
+
+.auth-screen {
+    display: none;
+    min-height: calc(100vh - 70px);
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background: var(--color-bg-gradient);
+    background-attachment: fixed;
+    transition: background 0.4s ease;
+}
+
+.auth-card {
+    background: var(--color-surface-glass);
+    border: 1px solid var(--color-border-glass);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 440px;
+    padding: 40px 36px;
+    box-shadow: var(--shadow-glass), 0 20px 40px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    animation: popModal 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.brand-mark.large {
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
+    font-size: 24px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-glass);
+}
+
+.auth-header h2 {
+    margin: 0 0 6px 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: -0.5px;
+}
+
+.auth-header p {
+    margin: 0;
+    font-size: 14.5px;
+    color: var(--color-text-muted);
+}
+
+.auth-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--color-surface-glass-alt);
+    border: 1px solid var(--color-border-glass);
+    padding: 4px;
+    border-radius: 14px;
+    margin-bottom: 24px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.auth-tab {
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 10px;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    border-radius: 10px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: center;
+    font-family: var(--font-heading);
+}
+
+.auth-tab:hover:not(.active) {
+    color: var(--color-text);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.auth-tab.active {
+    background: linear-gradient(135deg, var(--color-accent-blue) 0%, var(--color-accent-blue-dark) 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+}
+
+.auth-form {
+    display: none;
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.auth-form:not(.active) {
+    display: none !important;
+}
+
+.auth-form.active {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    opacity: 1;
+    transform: translateY(0);
+    animation: fadeInForm 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInForm {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.auth-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.auth-form label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    margin-left: 2px;
+}
+
+.auth-form input {
+    width: 100%;
+    border: 1px solid var(--color-border-glass);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-family: var(--font-body);
+    font-size: 14.5px;
+    background: var(--color-surface-glass-alt);
+    color: var(--color-text);
+    min-height: 46px;
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.2s ease;
+}
+
+.auth-form input:focus {
+    outline: none;
+    border-color: var(--color-accent-blue);
+    background: var(--color-surface-glass);
+    box-shadow: 0 0 0 3px var(--color-accent-blue-soft), 0 4px 12px rgba(2, 132, 199, 0.12);
+}
+
+.auth-form .btn {
+    width: 100%;
+    min-height: 46px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    background: linear-gradient(135deg, var(--color-accent-blue) 0%, var(--color-accent-orange) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.25);
+    margin-top: 6px;
+}
+
+.auth-form .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(249, 115, 22, 0.35);
+}
+
+.auth-form .btn:active {
+    transform: scale(0.98);
+}
+
 @media (max-width: 640px) {
     /* Bottom Sheet pour les modales sur téléphone */
     .modal-overlay {
@@ -964,44 +1149,51 @@ main {
     /* Optimisation des formulaires de Connexion/Inscription sur Mobile */
     .auth-screen {
         padding: 12px 12px 32px;
-        min-height: calc(100dvh - 70px);
+        min-height: calc(100vh - 60px);
         align-items: center;
+        justify-content: center;
     }
     .auth-card {
-        padding: 20px 16px;
+        padding: 24px 18px 28px;
         border-radius: 20px;
+        max-width: 100%;
+        box-shadow: var(--shadow-glass), 0 12px 28px rgba(0, 0, 0, 0.08);
     }
     .auth-header {
-        margin-bottom: 16px;
+        margin-bottom: 18px;
     }
     .brand-mark.large {
-        width: 48px;
-        height: 48px;
+        width: 50px;
+        height: 50px;
         font-size: 20px;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
     }
     .auth-header h2 {
-        font-size: 19px;
+        font-size: 20px;
     }
     .auth-header p {
         font-size: 13px;
     }
     .auth-tabs {
-        margin-bottom: 16px;
+        margin-bottom: 18px;
+        border-radius: 12px;
     }
     .auth-tab {
-        padding: 12px 8px;
-        font-size: 14px;
-        min-height: 44px;
+        padding: 9px 8px;
+        font-size: 13.5px;
+        min-height: 40px;
+    }
+    .auth-form.active {
+        gap: 16px;
     }
     .auth-form input {
-        padding: 14px 14px;
+        padding: 11px 14px;
         font-size: 16px; /* Empêche le zoom auto sur iPhone */
-        min-height: 48px;
+        min-height: 44px;
     }
     .auth-form .btn {
-        min-height: 48px;
+        min-height: 46px;
         font-size: 15px;
-        font-weight: 700;
+        margin-top: 4px;
     }
 }

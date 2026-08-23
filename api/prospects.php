@@ -136,7 +136,7 @@ switch ($method) {
             if (!in_array($data['statut'], $validStatuts, true)) {
                 respond(['success' => false, 'message' => 'Statut invalide.'], 422);
             }
-            $stmt = $pdo->prepare("UPDATE prospects SET statut = ? WHERE id = ? AND user_id = ?");
+            $stmt = $pdo->prepare("UPDATE prospects SET statut = ?, date_maj = NOW() WHERE id = ? AND user_id = ?");
             $stmt->execute([$data['statut'], $data['id'], $userId]);
             if ($stmt->rowCount() > 0) {
                 respond(['success' => true, 'message' => 'Statut mis à jour.']);
@@ -168,7 +168,8 @@ switch ($method) {
                 date_presentation = :date_presentation,
                 date_inscription = :date_inscription,
                 prochaine_relance = :prochaine_relance,
-                notes = :notes
+                notes = :notes,
+                date_maj = NOW()
             WHERE id = :id AND user_id = :user_id
         ");
 
