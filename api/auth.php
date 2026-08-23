@@ -22,14 +22,23 @@ if ($method === 'POST') {
 
         // Créer l'utilisateur
         $hash = password_hash($data['mot_de_passe'], PASSWORD_BCRYPT);
-        $stmt = $pdo->prepare("INSERT INTO users (nom, email, mot_de_passe) VALUES (?, ?, ?)");
-        
-        try {
-            $stmt->execute([$data['nom'], $data['email'], $hash]);
-            $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
-            $userId = ($driver === 'pgsql') ? $pdo->lastInsertId('users_id_seq') : $pdo->lastInsertId();
+        $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
 
-            // Créer quelques prospects d'exemple pour ce nouvel utilisateur
+        try {
+            if ($driver === 'pgsql') {
+                // PostgreSQL : utiliser RETURNING id (lastInsertId sur séquence est peu fiable avec PDO)
+                $stmt = $pdo->prepare("INSERT INTO users (nom, email, mot_de_passe) VALUES (?, ?, ?) RETURNING id");
+                $stmt->execute([$data['nom'], $data['email'], $hash]);
+                $row = $stmt->fetch();
+                $userId = (int) $row['id'];
+            } else {
+                // MySQL
+                $stmt = $pdo->prepare("INSERT INTO users (nom, email, mot_de_passe) VALUES (?, ?, ?)");
+                $stmt->execute([$data['nom'], $data['email'], $hash]);
+                $userId = (int) $pdo->lastInsertId();
+            }
+
+            // Créer un prospect d'exemple pour ce nouvel utilisateur
             $stmtSample = $pdo->prepare("
                 INSERT INTO prospects (user_id, nom, prenom, telephone, source, statut, notes)
                 VALUES
@@ -46,8 +55,8 @@ if ($method === 'POST') {
                 'success' => true,
                 'message' => 'Inscription réussie.',
                 'user' => [
-                    'id' => $userId,
-                    'nom' => $data['nom'],
+                    'id'    => $userId,
+                    'nom'   => $data['nom'],
                     'email' => $data['email']
                 ]
             ], 201);
