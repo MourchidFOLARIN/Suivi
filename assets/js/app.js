@@ -121,10 +121,12 @@ function afficherAppConnectee() {
     const userBadge = document.getElementById('user-badge');
     const userNameDisplay = document.getElementById('user-name-display');
     const btnAdd = document.getElementById('btn-open-add');
+    const mobileFab = document.getElementById('btn-mobile-fab');
 
     if (userBadge) userBadge.style.display = 'flex';
     if (userNameDisplay) userNameDisplay.textContent = `👋 ${currentUser.nom}`;
     if (btnAdd) btnAdd.style.display = 'inline-flex';
+    if (mobileFab) mobileFab.style.removeProperty('display');
 
     chargerStats();
     chargerProspects();
@@ -137,9 +139,11 @@ function afficherEcranAuth() {
 
     const userBadge = document.getElementById('user-badge');
     const btnAdd = document.getElementById('btn-open-add');
+    const mobileFab = document.getElementById('btn-mobile-fab');
 
     if (userBadge) userBadge.style.display = 'none';
     if (btnAdd) btnAdd.style.display = 'none';
+    if (mobileFab) mobileFab.style.display = 'none';
 }
 
 function initAuthUI() {
