@@ -481,21 +481,28 @@ function exporterCSV() {
         'Date Ajout'
     ];
 
+    const csvText = (value) => {
+        let text = String(value || '').replace(/\r?\n/g, ' ');
+        // Neutralise les formules lors de l'ouverture dans Excel/LibreOffice.
+        if (/^[=+\-@]/.test(text)) text = `'${text}`;
+        return `"${text.replace(/"/g, '""')}"`;
+    };
+
     const rows = currentProspectsData.map(p => [
         p.id,
-        `"${(p.nom || '').replace(/"/g, '""')}"`,
-        `"${(p.prenom || '').replace(/"/g, '""')}"`,
-        `"${(p.telephone || '').replace(/"/g, '""')}"`,
-        `"${(p.email || '').replace(/"/g, '""')}"`,
-        `"${(p.source || '').replace(/"/g, '""')}"`,
-        `"${STATUTS[p.statut]?.label || p.statut}"`,
+        csvText(p.nom),
+        csvText(p.prenom),
+        csvText(p.telephone),
+        csvText(p.email),
+        csvText(p.source),
+        csvText(STATUTS[p.statut]?.label || p.statut),
         Number(p.invitation_faite) ? 'Oui' : 'Non',
         p.date_invitation || '',
         Number(p.presentation_faite) ? 'Oui' : 'Non',
         p.date_presentation || '',
         p.date_inscription || '',
         p.prochaine_relance || '',
-        `"${(p.notes || '').replace(/"/g, '""').replace(/\r?\n/g, ' ')}"`,
+        csvText(p.notes),
         p.date_ajout || ''
     ]);
 

@@ -29,7 +29,20 @@ define('LOCAL_DB_USER', 'root');
 define('LOCAL_DB_PASS', '');
 
 header('Content-Type: application/json; charset=utf-8');
-header('Vary: Origin');
+header('Vary: Cookie, Origin');
+// Les réponses de l'API peuvent contenir des données personnelles : elles ne
+// doivent être ni mises en cache par le navigateur ni par un proxy partagé.
+header('Cache-Control: no-store, private');
+header('Pragma: no-cache');
+
+set_exception_handler(function (Throwable $e): void {
+    error_log('Unhandled application error: ' . $e->getMessage());
+    if (!headers_sent()) {
+        header('Content-Type: application/json; charset=utf-8');
+        http_response_code(500);
+    }
+    echo json_encode(['success' => false, 'message' => 'Une erreur interne est survenue. Réessayez plus tard.'], JSON_UNESCAPED_UNICODE);
+});
 
 function isAllowedOrigin(string $origin): bool
 {
@@ -49,6 +62,11 @@ function isAllowedOrigin(string $origin): bool
         if ($allowedOrigin === $origin) {
             return true;
         }
+    }
+
+    // Autoriser les origines de développement uniquement hors production.
+    if (getenv('APP_ENV') === 'production') {
+        return false;
     }
 
     $defaultAllowed = [
@@ -77,7 +95,7 @@ function setCorsHeaders(): void
 
 setCorsHeaders();
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
@@ -133,10 +151,6 @@ function getPDO(): PDO
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             ]);
 
-            if (empty($_SESSION['db_initialized'])) {
-                initDatabaseIfNeeded($pdo, 'pgsql');
-                $_SESSION['db_initialized'] = true;
-            }
         } else {
             // ── Mode Local (MySQL / XAMPP) ─────────────────────────
             $dsn = 'mysql:host=' . LOCAL_DB_HOST . ';dbname=' . LOCAL_DB_NAME . ';charset=utf8mb4';
@@ -145,27 +159,18 @@ function getPDO(): PDO
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             ]);
 
-            if (empty($_SESSION['db_initialized'])) {
-                initDatabaseIfNeeded($pdo, 'mysql');
-                $_SESSION['db_initialized'] = true;
-            }
         }
 
         return $pdo;
 
     } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'message' => 'Connexion à la base de données impossible : ' . $e->getMessage(),
-        ], JSON_UNESCAPED_UNICODE);
-        exit;
+        error_log('Database connection error: ' . $e->getMessage());
+        throw new RuntimeException('Database connection unavailable.', 0, $e);
     }
 }
 
-function initDatabaseIfNeeded(PDO $pdo, string $driver): void
+function runDatabaseMigrations(PDO $pdo, string $driver): void
 {
-    try {
         if ($driver === 'pgsql') {
             // 1. Table users (PostgreSQL)
             $pdo->exec("
@@ -184,7 +189,7 @@ function initDatabaseIfNeeded(PDO $pdo, string $driver): void
             $pdo->exec("
                 CREATE TABLE IF NOT EXISTS prospects (
                     id              SERIAL PRIMARY KEY,
-                    user_id         INT DEFAULT NULL,
+                    user_id         INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                     nom             VARCHAR(100) NOT NULL,
                     prenom          VARCHAR(100) NOT NULL,
                     telephone       VARCHAR(30)  NOT NULL,
@@ -199,7 +204,8 @@ function initDatabaseIfNeeded(PDO $pdo, string $driver): void
                     prochaine_relance   DATE     DEFAULT NULL,
                     notes           TEXT     DEFAULT NULL,
                     date_ajout      TIMESTAMP NOT NULL DEFAULT NOW(),
-                    date_maj        TIMESTAMP NOT NULL DEFAULT NOW()
+                    date_maj        TIMESTAMP NOT NULL DEFAULT NOW(),
+                    CONSTRAINT prospects_statut_check CHECK (statut IN ('nouveau', 'invite', 'presente', 'interesse', 'inscrit', 'perdu'))
                 );
             ");
 
@@ -208,6 +214,9 @@ function initDatabaseIfNeeded(PDO $pdo, string $driver): void
             $pdo->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(150);");
             $pdo->exec("ALTER TABLE users ADD COLUMN IF NOT EXISTS mot_de_passe VARCHAR(255);");
             $pdo->exec("ALTER TABLE prospects ADD COLUMN IF NOT EXISTS user_id INT DEFAULT NULL;");
+            $pdo->exec("CREATE INDEX IF NOT EXISTS prospects_user_date_ajout_idx ON prospects (user_id, date_ajout);");
+            $pdo->exec("CREATE INDEX IF NOT EXISTS prospects_user_statut_idx ON prospects (user_id, statut);");
+            $pdo->exec("CREATE TABLE IF NOT EXISTS auth_attempts (attempt_key VARCHAR(64) PRIMARY KEY, attempts INT NOT NULL DEFAULT 0, blocked_until TIMESTAMP NULL, updated_at TIMESTAMP NOT NULL DEFAULT NOW());");
 
         } else {
             // 1. Table users (MySQL)
@@ -225,7 +234,7 @@ function initDatabaseIfNeeded(PDO $pdo, string $driver): void
             $pdo->exec("
                 CREATE TABLE IF NOT EXISTS prospects (
                     id INT AUTO_INCREMENT PRIMARY KEY,
-                    user_id INT DEFAULT NULL,
+                    user_id INT NOT NULL,
                     nom VARCHAR(100) NOT NULL,
                     prenom VARCHAR(100) NOT NULL,
                     telephone VARCHAR(30) NOT NULL,
@@ -240,7 +249,10 @@ function initDatabaseIfNeeded(PDO $pdo, string $driver): void
                     prochaine_relance DATE DEFAULT NULL,
                     notes TEXT DEFAULT NULL,
                     date_ajout DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    date_maj DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                    date_maj DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    KEY prospects_user_date_ajout (user_id, date_ajout),
+                    KEY prospects_user_statut (user_id, statut),
+                    CONSTRAINT prospects_user_fk FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             ");
 
@@ -267,10 +279,8 @@ function initDatabaseIfNeeded(PDO $pdo, string $driver): void
                     }
                 }
             }
+            $pdo->exec("CREATE TABLE IF NOT EXISTS auth_attempts (attempt_key VARCHAR(64) PRIMARY KEY, attempts INT NOT NULL DEFAULT 0, blocked_until DATETIME NULL, updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
         }
-    } catch (Exception $e) {
-        error_log('Init DB Error: ' . $e->getMessage());
-    }
 }
 
 function getUserColumns(PDO $pdo): array
@@ -314,6 +324,9 @@ function repairPostgresUserTable(PDO $pdo): void
     }
 
     $pdo->exec("UPDATE users SET id = nextval('{$sequenceName}') WHERE id IS NULL");
+    // Une séquence créée pour une table legacy démarre à 1. La synchroniser
+    // évite une collision de clé primaire au prochain compte créé.
+    $pdo->exec("SELECT setval('{$sequenceName}', COALESCE((SELECT MAX(id) FROM users), 1), true)");
     $pdo->exec("ALTER TABLE users ALTER COLUMN id SET DEFAULT nextval('{$sequenceName}')");
     $pdo->exec("ALTER TABLE users ALTER COLUMN id SET NOT NULL");
 
@@ -363,8 +376,22 @@ function requireAuth(): array
 
 function jsonInput(): array
 {
-    $data = json_decode(file_get_contents('php://input'), true);
-    return is_array($data) ? $data : [];
+    $raw = file_get_contents('php://input');
+    if ($raw === false || $raw === '') {
+        return [];
+    }
+
+    try {
+        $data = json_decode($raw, true, 32, JSON_THROW_ON_ERROR);
+    } catch (JsonException) {
+        respond(['success' => false, 'message' => 'Le corps de la requête doit être un JSON valide.'], 400);
+    }
+
+    if (!is_array($data) || array_is_list($data)) {
+        respond(['success' => false, 'message' => 'Le corps de la requête doit être un objet JSON.'], 400);
+    }
+
+    return $data;
 }
 
 function respond($data, int $code = 200): void

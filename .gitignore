@@ -6,6 +6,7 @@
 
 # XAMPP / WAMP locaux
 /opt/
+.data_mysql/
 nbproject/
 
 # IDE

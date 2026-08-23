@@ -13,7 +13,8 @@ suivi-prospects/
 │   └── js/app.js           → logique de l'application
 └── api/
     ├── config.php          → connexion à la base de données (à configurer)
-    └── prospects.php       → API (ajout, modification, suppression, liste)
+    ├── auth.php            → API d'inscription et de connexion
+    └── prospects.php       → API sécurisée des prospects
 ```
 
 ## Installation (avec WAMP, MAMP, XAMPP ou Laragon)
@@ -26,7 +27,8 @@ suivi-prospects/
 2. **Crée la base de données** :
    - Ouvre phpMyAdmin (`http://localhost/phpmyadmin`)
    - Va dans l'onglet **Importer**, choisis le fichier `database.sql`, puis valide.
-   - Cela crée la base `suivi_prospects` et la table `prospects` (avec 3 exemples que tu peux supprimer).
+   - Cela crée la base `suivi_prospects`, les comptes utilisateurs et les prospects.
+   - Les comptes sont créés depuis l'écran d'inscription ; aucun prospect de démonstration partagé n'est importé.
 
 3. **Configure la connexion** dans `api/config.php` si besoin :
    ```php
@@ -35,6 +37,13 @@ suivi-prospects/
    define('DB_USER', 'root');
    define('DB_PASS', '');   // souvent vide en local
    ```
+
+   Après une mise à jour du projet, applique les migrations avant de relancer
+   l'application :
+   ```bash
+   php scripts/migrate.php
+   ```
+   En production Docker, cette étape est exécutée automatiquement au démarrage.
 
 4. **Lance l'application** :
    - Démarre Apache + MySQL depuis WAMP/XAMPP/Laragon

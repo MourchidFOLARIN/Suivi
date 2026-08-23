@@ -4,8 +4,19 @@
 -- (Dashboard > Database > "Connect" > psql ou Query)
 -- =====================================================
 
+CREATE TABLE IF NOT EXISTS users (
+    id              SERIAL PRIMARY KEY,
+    nom             VARCHAR(100) NOT NULL,
+    email           VARCHAR(150) NOT NULL,
+    mot_de_passe    VARCHAR(255) NOT NULL,
+    date_creation   TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS users_email_unique_idx ON users (LOWER(email));
+
 CREATE TABLE IF NOT EXISTS prospects (
     id              SERIAL PRIMARY KEY,
+    user_id         INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     nom             VARCHAR(100) NOT NULL,
     prenom          VARCHAR(100) NOT NULL,
     telephone       VARCHAR(30)  NOT NULL,
@@ -24,6 +35,16 @@ CREATE TABLE IF NOT EXISTS prospects (
     date_maj        TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+CREATE INDEX IF NOT EXISTS prospects_user_date_ajout_idx ON prospects (user_id, date_ajout);
+CREATE INDEX IF NOT EXISTS prospects_user_statut_idx ON prospects (user_id, statut);
+
+CREATE TABLE IF NOT EXISTS auth_attempts (
+    attempt_key VARCHAR(64) PRIMARY KEY,
+    attempts INT NOT NULL DEFAULT 0,
+    blocked_until TIMESTAMP DEFAULT NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
 -- Trigger pour mettre à jour date_maj automatiquement
 CREATE OR REPLACE FUNCTION update_date_maj()
 RETURNS TRIGGER AS $$
@@ -37,10 +58,3 @@ DROP TRIGGER IF EXISTS trg_date_maj ON prospects;
 CREATE TRIGGER trg_date_maj
     BEFORE UPDATE ON prospects
     FOR EACH ROW EXECUTE FUNCTION update_date_maj();
-
--- Données d'exemple (à supprimer si non désirées)
-INSERT INTO prospects (nom, prenom, telephone, email, source, statut, invitation_faite, date_invitation, presentation_faite, date_presentation, notes)
-VALUES
-('AGOSSOU',    'Chimène',  '0197001122', 'chimene.a@example.com', 'Ami(e)',         'presente', 1, '2026-08-10', 1, '2026-08-15', 'Très motivée, attend de voir les résultats de son cousin.'),
-('DOSSOU',     'Ferdinand','0197002233', NULL,                    'Marché',         'invite',   1, '2026-08-18', 0, NULL,         'A dit qu il rappellerait après le week-end.'),
-('HOUNTONDJI', 'Sandra',   '0197003344', 'sandra.h@example.com', 'Réseaux sociaux','nouveau',  0, NULL,         0, NULL,         'Contact pris via Facebook, pas encore relancée.');

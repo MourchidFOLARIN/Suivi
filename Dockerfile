@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
 # Active mod_rewrite pour Apache
 RUN a2enmod rewrite headers
 
-# Copie des fichiers de l'application
+# Copie des fichiers de l'application (les données locales sont exclues par .dockerignore)
 COPY . /var/www/html/
 
 # Configuration Apache : autoriser .htaccess et les en-têtes CORS

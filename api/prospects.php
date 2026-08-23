@@ -14,9 +14,21 @@ if (in_array($method, ['POST', 'PUT', 'DELETE'], true)) {
 
 $validStatuts = ['nouveau', 'invite', 'presente', 'interesse', 'inscrit', 'perdu'];
 
-function normalizeText(?string $value): string
+function normalizeText(mixed $value, string $field, int $maxLength): string
 {
-    return trim((string) ($value ?? ''));
+    if ($value === null) {
+        return '';
+    }
+    if (!is_string($value)) {
+        respond(['success' => false, 'message' => "Le champ {$field} doit être une chaîne de caractères."], 422);
+    }
+
+    $value = trim($value);
+    if (strlen($value) > $maxLength) {
+        respond(['success' => false, 'message' => "Le champ {$field} est trop long."], 422);
+    }
+
+    return $value;
 }
 
 function validateDateOrNull(mixed $value): ?string
@@ -25,7 +37,7 @@ function validateDateOrNull(mixed $value): ?string
         return null;
     }
 
-    $value = normalizeText((string) $value);
+    $value = normalizeText($value, 'date', 10);
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
         respond(['success' => false, 'message' => 'La date est invalide. Utilise le format YYYY-MM-DD.'], 422);
     }
@@ -38,15 +50,34 @@ function validateDateOrNull(mixed $value): ?string
     return $value;
 }
 
+function normalizeBoolean(mixed $value, string $field): int
+{
+    if (is_bool($value)) {
+        return $value ? 1 : 0;
+    }
+    if ($value === 0 || $value === 1 || $value === '0' || $value === '1') {
+        return (int) $value;
+    }
+    respond(['success' => false, 'message' => "Le champ {$field} doit être booléen."], 422);
+}
+
+function validatedPositiveId(mixed $value): int
+{
+    if (filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) === false) {
+        respond(['success' => false, 'message' => 'Identifiant invalide.'], 422);
+    }
+    return (int) $value;
+}
+
 function normalizeProspectPayload(array $data, bool $isUpdate = false): array
 {
-    $nom = normalizeText($data['nom'] ?? '');
-    $prenom = normalizeText($data['prenom'] ?? '');
-    $telephone = normalizeText($data['telephone'] ?? '');
-    $email = normalizeText($data['email'] ?? '');
-    $source = normalizeText($data['source'] ?? '');
-    $notes = normalizeText($data['notes'] ?? '');
-    $statut = normalizeText($data['statut'] ?? 'nouveau');
+    $nom = normalizeText($data['nom'] ?? '', 'nom', 100);
+    $prenom = normalizeText($data['prenom'] ?? '', 'prénom', 100);
+    $telephone = normalizeText($data['telephone'] ?? '', 'téléphone', 30);
+    $email = normalizeText($data['email'] ?? '', 'email', 150);
+    $source = normalizeText($data['source'] ?? '', 'source', 100);
+    $notes = normalizeText($data['notes'] ?? '', 'notes', 5000);
+    $statut = normalizeText($data['statut'] ?? 'nouveau', 'statut', 20);
 
     if (!$isUpdate || $nom !== '' || $prenom !== '' || $telephone !== '') {
         if ($nom === '') {
@@ -68,8 +99,8 @@ function normalizeProspectPayload(array $data, bool $isUpdate = false): array
         respond(['success' => false, 'message' => 'L’email est invalide.'], 422);
     }
 
-    $invitationFaite = !empty($data['invitation_faite']);
-    $presentationFaite = !empty($data['presentation_faite']);
+    $invitationFaite = normalizeBoolean($data['invitation_faite'] ?? false, 'invitation_faite');
+    $presentationFaite = normalizeBoolean($data['presentation_faite'] ?? false, 'presentation_faite');
     $dateInvitation = validateDateOrNull($data['date_invitation'] ?? null);
     $datePresentation = validateDateOrNull($data['date_presentation'] ?? null);
     $dateInscription = validateDateOrNull($data['date_inscription'] ?? null);
@@ -90,9 +121,9 @@ function normalizeProspectPayload(array $data, bool $isUpdate = false): array
         'email' => $email !== '' ? $email : null,
         'source' => $source !== '' ? $source : null,
         'statut' => $statut,
-        'invitation_faite' => $invitationFaite ? 1 : 0,
+        'invitation_faite' => $invitationFaite,
         'date_invitation' => $dateInvitation,
-        'presentation_faite' => $presentationFaite ? 1 : 0,
+        'presentation_faite' => $presentationFaite,
         'date_presentation' => $datePresentation,
         'date_inscription' => $dateInscription,
         'prochaine_relance' => $prochaineRelance,
@@ -135,9 +166,10 @@ switch ($method) {
             break;
         }
 
-        if (!empty($_GET['id'])) {
+        if (isset($_GET['id'])) {
+            $id = validatedPositiveId($_GET['id']);
             $stmt = $pdo->prepare("SELECT * FROM prospects WHERE id = ? AND user_id = ?");
-            $stmt->execute([$_GET['id'], $userId]);
+            $stmt->execute([$id, $userId]);
             $prospect = $stmt->fetch();
             if ($prospect) {
                 respond(['success' => true, 'data' => $prospect]);
@@ -159,16 +191,23 @@ switch ($method) {
         }
 
         if (!empty($_GET['recherche'])) {
+            if (!is_string($_GET['recherche']) || strlen($_GET['recherche']) > 100) {
+                respond(['success' => false, 'message' => 'Recherche invalide.'], 422);
+            }
             $query .= " AND (nom LIKE :recherche OR prenom LIKE :recherche OR telephone LIKE :recherche)";
             $params[':recherche'] = '%' . $_GET['recherche'] . '%';
         }
 
         $query .= " ORDER BY date_ajout DESC";
+        $page = filter_var($_GET['page'] ?? 1, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 1;
+        $limit = filter_var($_GET['limit'] ?? 100, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 100]]) ?: 100;
+        $offset = ($page - 1) * $limit;
+        $query .= " LIMIT {$limit} OFFSET {$offset}";
         $stmt = $pdo->prepare($query);
         $stmt->execute($params);
         $prospects = $stmt->fetchAll();
 
-        respond(['success' => true, 'data' => $prospects]);
+        respond(['success' => true, 'data' => $prospects, 'pagination' => ['page' => $page, 'limit' => $limit]]);
         break;
 
     // ---------- CRÉATION ----------
@@ -222,25 +261,23 @@ switch ($method) {
     case 'PUT':
         $data = jsonInput();
 
-        if (empty($data['id'])) {
-            respond(['success' => false, 'message' => 'Identifiant manquant.'], 422);
-        }
+        $id = validatedPositiveId($data['id'] ?? null);
 
         // Vérifier d'abord si le prospect existe et appartient à cet utilisateur
         $checkStmt = $pdo->prepare("SELECT id FROM prospects WHERE id = ? AND user_id = ?");
-        $checkStmt->execute([$data['id'], $userId]);
+        $checkStmt->execute([$id, $userId]);
         if (!$checkStmt->fetch()) {
             respond(['success' => false, 'message' => 'Prospect introuvable ou non autorisé.'], 403);
         }
 
         // Mise à jour rapide du statut
         if (isset($data['statut']) && !isset($data['nom'])) {
-            $statut = normalizeText((string) $data['statut']);
+            $statut = normalizeText($data['statut'], 'statut', 20);
             if (!in_array($statut, $validStatuts, true)) {
                 respond(['success' => false, 'message' => 'Statut invalide.'], 422);
             }
             $stmt = $pdo->prepare("UPDATE prospects SET statut = ?, date_maj = NOW() WHERE id = ? AND user_id = ?");
-            $stmt->execute([$statut, $data['id'], $userId]);
+            $stmt->execute([$statut, $id, $userId]);
             respond(['success' => true, 'message' => 'Statut mis à jour.']);
         }
 
@@ -266,7 +303,7 @@ switch ($method) {
         ");
 
         $stmt->execute([
-            'id' => (int) $data['id'],
+            'id' => $id,
             'user_id' => $userId,
             'nom' => $payload['nom'],
             'prenom' => $payload['prenom'],
@@ -288,11 +325,9 @@ switch ($method) {
 
     // ---------- SUPPRESSION ----------
     case 'DELETE':
-        if (empty($_GET['id'])) {
-            respond(['success' => false, 'message' => 'Identifiant manquant.'], 422);
-        }
+        $id = validatedPositiveId($_GET['id'] ?? null);
         $stmt = $pdo->prepare("DELETE FROM prospects WHERE id = ? AND user_id = ?");
-        $stmt->execute([$_GET['id'], $userId]);
+        $stmt->execute([$id, $userId]);
         
         if ($stmt->rowCount() > 0) {
             respond(['success' => true, 'message' => 'Prospect supprimé.']);
