@@ -178,6 +178,8 @@ function initDatabaseIfNeeded(PDO $pdo, string $driver): void
                 );
             ");
 
+            repairPostgresUserTable($pdo);
+
             // 2. Table prospects (PostgreSQL)
             $pdo->exec("
                 CREATE TABLE IF NOT EXISTS prospects (
@@ -269,6 +271,63 @@ function initDatabaseIfNeeded(PDO $pdo, string $driver): void
     } catch (Exception $e) {
         error_log('Init DB Error: ' . $e->getMessage());
     }
+}
+
+function repairPostgresUserTable(PDO $pdo): void
+{
+    $tableCheck = $pdo->query("SELECT to_regclass('public.users')")->fetchColumn();
+    if (!$tableCheck) {
+        $pdo->exec("
+            CREATE TABLE users (
+                id SERIAL PRIMARY KEY,
+                nom VARCHAR(100) NOT NULL,
+                email VARCHAR(150) UNIQUE NOT NULL,
+                mot_de_passe VARCHAR(255) NOT NULL,
+                date_creation TIMESTAMP NOT NULL DEFAULT NOW()
+            );
+        ");
+        return;
+    }
+
+    $columns = $pdo->query("
+        SELECT column_name, is_nullable, data_type
+        FROM information_schema.columns
+        WHERE table_schema = current_schema() AND table_name = 'users'
+        ORDER BY ordinal_position
+    ")->fetchAll();
+
+    $columnNames = array_column($columns, 'column_name');
+
+    if (!in_array('id', $columnNames, true)) {
+        $pdo->exec("ALTER TABLE users ADD COLUMN id SERIAL;");
+    }
+
+    $sequenceName = 'users_id_seq';
+    $sequenceExists = $pdo->query("SELECT 1 FROM pg_class WHERE relname = '{$sequenceName}'")->fetchColumn();
+    if (!$sequenceExists) {
+        $pdo->exec("CREATE SEQUENCE IF NOT EXISTS {$sequenceName}");
+    }
+
+    $pdo->exec("UPDATE users SET id = nextval('{$sequenceName}') WHERE id IS NULL");
+    $pdo->exec("ALTER TABLE users ALTER COLUMN id SET DEFAULT nextval('{$sequenceName}')");
+    $pdo->exec("ALTER TABLE users ALTER COLUMN id SET NOT NULL");
+
+    $pkExists = $pdo->query("SELECT COUNT(*) FROM pg_constraint WHERE conrelid = 'users'::regclass AND contype = 'p'")->fetchColumn();
+    if ((int) $pkExists === 0) {
+        $pdo->exec("ALTER TABLE users ADD PRIMARY KEY (id)");
+    }
+
+    foreach (['nom', 'email', 'mot_de_passe'] as $column) {
+        if (!in_array($column, $columnNames, true)) {
+            $pdo->exec("ALTER TABLE users ADD COLUMN {$column} VARCHAR(255)");
+        }
+    }
+
+    $pdo->exec("ALTER TABLE users ALTER COLUMN nom SET NOT NULL");
+    $pdo->exec("ALTER TABLE users ALTER COLUMN email SET NOT NULL");
+    $pdo->exec("ALTER TABLE users ALTER COLUMN mot_de_passe SET NOT NULL");
+
+    $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS users_email_unique_idx ON users (LOWER(email))");
 }
 
 function requireAuth(): array
