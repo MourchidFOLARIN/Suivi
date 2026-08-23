@@ -791,6 +791,10 @@ main {
     border-color: var(--color-accent-blue);
     box-shadow: 0 0 0 3px var(--color-accent-blue-soft), 0 4px 12px rgba(2, 132, 199, 0.15);
 }
+.field input::placeholder, .field textarea::placeholder {
+    color: var(--color-text-muted);
+    opacity: 0.72;
+}
 
 .field textarea { resize: vertical; min-height: 72px; }
 
