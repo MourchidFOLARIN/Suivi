@@ -159,6 +159,15 @@ function getPDO(): PDO
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             ]);
 
+            // En local, l'application reste immédiatement utilisable après
+            // une mise à jour : la migration est exécutée une fois par session.
+            // En production, elle reste strictement exécutée au démarrage du
+            // conteneur par scripts/migrate.php.
+            if (getenv('APP_ENV') !== 'production' && empty($_SESSION['local_db_migrated'])) {
+                runDatabaseMigrations($pdo, 'mysql');
+                $_SESSION['local_db_migrated'] = true;
+            }
+
         }
 
         return $pdo;
