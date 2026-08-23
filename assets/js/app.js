@@ -708,15 +708,10 @@ function fermerModal() {
 async function soumettreForm(e) {
     e.preventDefault();
 
-    const requiredFields = [
-        ['f-nom', 'le nom'],
-        ['f-prenom', 'le prénom'],
-        ['f-telephone', 'le téléphone'],
-    ];
-    const missingField = requiredFields.find(([id]) => !document.getElementById(id).value.trim());
-    if (missingField) {
-        document.getElementById(missingField[0]).focus();
-        afficherToast(`Veuillez renseigner ${missingField[1]}.`, true);
+    const identificationFields = ['f-nom', 'f-prenom', 'f-telephone', 'f-email'];
+    if (!identificationFields.some(id => document.getElementById(id).value.trim())) {
+        document.getElementById('f-nom').focus();
+        afficherToast('Renseigne au moins un nom, un prénom, un téléphone ou un email.', true);
         return;
     }
 

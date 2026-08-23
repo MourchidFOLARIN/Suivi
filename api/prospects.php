@@ -79,17 +79,15 @@ function normalizeProspectPayload(array $data, bool $isUpdate = false): array
     $notes = normalizeText($data['notes'] ?? '', 'notes', 5000);
     $statut = normalizeText($data['statut'] ?? 'nouveau', 'statut', 20);
 
-    if (!$isUpdate || $nom !== '' || $prenom !== '' || $telephone !== '') {
-        if ($nom === '') {
-            respond(['success' => false, 'message' => 'Le nom est obligatoire.'], 422);
-        }
-        if ($prenom === '') {
-            respond(['success' => false, 'message' => 'Le prénom est obligatoire.'], 422);
-        }
-        if ($telephone === '') {
-            respond(['success' => false, 'message' => 'Le téléphone est obligatoire.'], 422);
-        }
+    if (!$isUpdate && $nom === '' && $prenom === '' && $telephone === '' && $email === '') {
+        respond(['success' => false, 'message' => 'Renseigne au moins un nom, un prénom, un téléphone ou un email.'], 422);
     }
+
+    // Le schéma historique impose ces colonnes, mais une fiche peut être créée
+    // avec une information partielle puis complétée lors d'une relance.
+    $nom = $nom !== '' ? $nom : ($prenom !== '' ? $prenom : 'Prospect sans nom');
+    $prenom = $prenom !== '' ? $prenom : '-';
+    $telephone = $telephone !== '' ? $telephone : 'Non renseigné';
 
     if ($statut === '' || !in_array($statut, $GLOBALS['validStatuts'], true)) {
         respond(['success' => false, 'message' => 'Statut invalide.'], 422);
