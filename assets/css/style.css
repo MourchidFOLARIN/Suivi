@@ -1133,7 +1133,7 @@ main {
 
     .form-grid { grid-template-columns: 1fr; gap: 12px; }
 
-    .brand-sub { display: none; }
+    .brand-title { display: none; }
 
     /* Masquer le bouton entête d'ajout sur mobile (le style inline est défini en JS). */
     #btn-open-add { display: none !important; }
