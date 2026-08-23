@@ -17,6 +17,7 @@ let currentSearch = '';
 let currentSort = 'date_desc';
 let editingId = null;
 let currentProspectsData = [];
+let currentCsrfToken = '';
 
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
@@ -91,6 +92,7 @@ async function verifierAuthentification() {
     try {
         const res = await fetch(`${AUTH_URL}?action=me`);
         const json = await res.json();
+        currentCsrfToken = json.csrf_token || currentCsrfToken;
         if (json.success && json.user) {
             currentUser = json.user;
             afficherAppConnectee();
@@ -102,6 +104,14 @@ async function verifierAuthentification() {
         console.error('Erreur authentification:', err);
         afficherEcranAuth();
     }
+}
+
+function getHeaders(options = {}) {
+    const headers = { ...(options.headers || {}) };
+    if (currentCsrfToken) {
+        headers['X-CSRF-Token'] = currentCsrfToken;
+    }
+    return headers;
 }
 
 function afficherAppConnectee() {
@@ -164,10 +174,11 @@ function initAuthUI() {
             try {
                 const res = await fetch(`${AUTH_URL}?action=login`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ email, mot_de_passe })
                 });
                 const json = await res.json();
+                currentCsrfToken = json.csrf_token || currentCsrfToken;
                 if (json.success) {
                     currentUser = json.user;
                     afficherToast('Connexion réussie !');
@@ -198,10 +209,11 @@ function initAuthUI() {
             try {
                 const res = await fetch(`${AUTH_URL}?action=register`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ nom, email, mot_de_passe })
                 });
                 const json = await res.json();
+                currentCsrfToken = json.csrf_token || currentCsrfToken;
                 if (json.success) {
                     currentUser = json.user;
                     afficherToast('Compte créé avec succès ! 🎉');
@@ -222,8 +234,12 @@ function initAuthUI() {
     if (btnLogout) {
         btnLogout.addEventListener('click', async () => {
             try {
-                await fetch(`${AUTH_URL}?action=logout`, { method: 'POST' });
+                await fetch(`${AUTH_URL}?action=logout`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                });
                 currentUser = null;
+                currentCsrfToken = '';
                 afficherToast('Déconnecté.');
                 afficherEcranAuth();
             } catch (err) {
@@ -508,7 +524,10 @@ async function supprimerProspect(id) {
     if (!ok) return;
 
     try {
-        const res = await fetch(`${API_URL}?id=${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API_URL}?id=${id}`, {
+            method: 'DELETE',
+            headers: getHeaders(),
+        });
         const json = await res.json();
         afficherToast(json.message, !json.success);
         chargerProspects();
@@ -520,7 +539,7 @@ async function changerStatut(id, statut) {
     try {
         const res = await fetch(API_URL, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({ id, statut }),
         });
         const json = await res.json();
@@ -709,7 +728,7 @@ async function soumettreForm(e) {
     try {
         const res = await fetch(API_URL, {
             method: isEdit ? 'PUT' : 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify(payload),
         });
         const json = await res.json();

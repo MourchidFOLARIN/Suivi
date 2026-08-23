@@ -29,16 +29,82 @@ define('LOCAL_DB_USER', 'root');
 define('LOCAL_DB_PASS', '');
 
 header('Content-Type: application/json; charset=utf-8');
-if (isset($_SERVER['HTTP_ORIGIN'])) {
-    header('Access-Control-Allow-Origin: ' . $_SERVER['HTTP_ORIGIN']);
+header('Vary: Origin');
+
+function isAllowedOrigin(string $origin): bool
+{
+    $origin = trim($origin);
+    if ($origin === '') {
+        return false;
+    }
+
+    $host = parse_url($origin, PHP_URL_HOST);
+    $httpHost = $_SERVER['HTTP_HOST'] ?? '';
+    if ($host !== false && $host === $httpHost) {
+        return true;
+    }
+
+    $allowedOrigins = array_filter(array_map('trim', explode(',', getenv('APP_ALLOWED_ORIGINS') ?: '')));
+    foreach ($allowedOrigins as $allowedOrigin) {
+        if ($allowedOrigin === $origin) {
+            return true;
+        }
+    }
+
+    $defaultAllowed = [
+        'http://localhost',
+        'http://localhost:80',
+        'http://localhost:8080',
+        'http://127.0.0.1',
+        'http://127.0.0.1:80',
+        'http://127.0.0.1:8080',
+    ];
+
+    return in_array($origin, $defaultAllowed, true);
 }
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-header('Access-Control-Allow-Credentials: true');
+
+function setCorsHeaders(): void
+{
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+    if ($origin !== '' && isAllowedOrigin($origin)) {
+        header('Access-Control-Allow-Origin: ' . $origin);
+        header('Access-Control-Allow-Credentials: true');
+    }
+
+    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, X-CSRF-Token, X-CSRFToken');
+}
+
+setCorsHeaders();
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
+}
+
+function ensureCsrfToken(): string
+{
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+
+    return $_SESSION['csrf_token'];
+}
+
+function verifyCsrfToken(): void
+{
+    if ($_SERVER['REQUEST_METHOD'] === 'GET' || $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        return;
+    }
+
+    $received = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_SERVER['HTTP_X_CSRFTOKEN'] ?? null;
+    if ($received === null && isset($_POST['csrf_token'])) {
+        $received = $_POST['csrf_token'];
+    }
+
+    if ($received === null || !hash_equals($_SESSION['csrf_token'] ?? '', (string) $received)) {
+        respond(['success' => false, 'message' => 'Token CSRF invalide. Rechargez la page et réessayez.'], 419);
+    }
 }
 
 function getPDO(): PDO
@@ -176,11 +242,29 @@ function initDatabaseIfNeeded(PDO $pdo, string $driver): void
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             ");
 
-            // Garantir que toutes les colonnes existent (MySQL)
-            try { $pdo->exec("ALTER TABLE users ADD COLUMN nom VARCHAR(100) NOT NULL;"); } catch (Exception $e) {}
-            try { $pdo->exec("ALTER TABLE users ADD COLUMN email VARCHAR(150) UNIQUE NOT NULL;"); } catch (Exception $e) {}
-            try { $pdo->exec("ALTER TABLE users ADD COLUMN mot_de_passe VARCHAR(255) NOT NULL;"); } catch (Exception $e) {}
-            try { $pdo->exec("ALTER TABLE prospects ADD COLUMN user_id INT DEFAULT NULL;"); } catch (Exception $e) {}
+            // Garantir que les colonnes existent sans casser les tables déjà créées
+            $requiredColumns = [
+                'users' => [
+                    ['nom', 'VARCHAR(100) NULL'],
+                    ['email', 'VARCHAR(150) NULL'],
+                    ['mot_de_passe', 'VARCHAR(255) NULL'],
+                ],
+                'prospects' => [
+                    ['user_id', 'INT NULL DEFAULT NULL'],
+                ],
+            ];
+
+            foreach ($requiredColumns as $table => $columns) {
+                foreach ($columns as [$column, $definition]) {
+                    $checkStmt = $pdo->prepare(
+                        "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?"
+                    );
+                    $checkStmt->execute([$table, $column]);
+                    if ((int) $checkStmt->fetchColumn() === 0) {
+                        $pdo->exec("ALTER TABLE {$table} ADD COLUMN {$column} {$definition}");
+                    }
+                }
+            }
         }
     } catch (Exception $e) {
         error_log('Init DB Error: ' . $e->getMessage());

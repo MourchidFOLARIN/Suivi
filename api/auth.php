@@ -6,6 +6,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
 if ($method === 'POST') {
+    verifyCsrfToken();
     $data = jsonInput();
 
     if ($action === 'register') {
@@ -54,6 +55,7 @@ if ($method === 'POST') {
             respond([
                 'success' => true,
                 'message' => 'Inscription réussie.',
+                'csrf_token' => ensureCsrfToken(),
                 'user' => [
                     'id'    => $userId,
                     'nom'   => $data['nom'],
@@ -82,6 +84,7 @@ if ($method === 'POST') {
             respond([
                 'success' => true,
                 'message' => 'Connexion réussie.',
+                'csrf_token' => ensureCsrfToken(),
                 'user' => [
                     'id' => $user['id'],
                     'nom' => $user['nom'],
@@ -105,6 +108,7 @@ if ($method === 'GET') {
         if (!empty($_SESSION['user_id'])) {
             respond([
                 'success' => true,
+                'csrf_token' => ensureCsrfToken(),
                 'user' => [
                     'id' => $_SESSION['user_id'],
                     'nom' => $_SESSION['user_nom'],
@@ -112,7 +116,11 @@ if ($method === 'GET') {
                 ]
             ]);
         } else {
-            respond(['success' => false, 'user' => null]);
+            respond([
+                'success' => false,
+                'csrf_token' => ensureCsrfToken(),
+                'user' => null
+            ]);
         }
     }
 }

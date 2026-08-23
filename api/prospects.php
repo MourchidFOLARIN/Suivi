@@ -8,7 +8,97 @@ $userId = $user['id'];
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
+if (in_array($method, ['POST', 'PUT', 'DELETE'], true)) {
+    verifyCsrfToken();
+}
+
 $validStatuts = ['nouveau', 'invite', 'presente', 'interesse', 'inscrit', 'perdu'];
+
+function normalizeText(?string $value): string
+{
+    return trim((string) ($value ?? ''));
+}
+
+function validateDateOrNull(mixed $value): ?string
+{
+    if ($value === null || $value === '') {
+        return null;
+    }
+
+    $value = normalizeText((string) $value);
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+        respond(['success' => false, 'message' => 'La date est invalide. Utilise le format YYYY-MM-DD.'], 422);
+    }
+
+    $dt = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
+    if (!$dt || $dt->format('Y-m-d') !== $value) {
+        respond(['success' => false, 'message' => 'La date est invalide. Utilise le format YYYY-MM-DD.'], 422);
+    }
+
+    return $value;
+}
+
+function normalizeProspectPayload(array $data, bool $isUpdate = false): array
+{
+    $nom = normalizeText($data['nom'] ?? '');
+    $prenom = normalizeText($data['prenom'] ?? '');
+    $telephone = normalizeText($data['telephone'] ?? '');
+    $email = normalizeText($data['email'] ?? '');
+    $source = normalizeText($data['source'] ?? '');
+    $notes = normalizeText($data['notes'] ?? '');
+    $statut = normalizeText($data['statut'] ?? 'nouveau');
+
+    if (!$isUpdate || $nom !== '' || $prenom !== '' || $telephone !== '') {
+        if ($nom === '') {
+            respond(['success' => false, 'message' => 'Le nom est obligatoire.'], 422);
+        }
+        if ($prenom === '') {
+            respond(['success' => false, 'message' => 'Le prénom est obligatoire.'], 422);
+        }
+        if ($telephone === '') {
+            respond(['success' => false, 'message' => 'Le téléphone est obligatoire.'], 422);
+        }
+    }
+
+    if ($statut === '' || !in_array($statut, $GLOBALS['validStatuts'], true)) {
+        respond(['success' => false, 'message' => 'Statut invalide.'], 422);
+    }
+
+    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        respond(['success' => false, 'message' => 'L’email est invalide.'], 422);
+    }
+
+    $invitationFaite = !empty($data['invitation_faite']);
+    $presentationFaite = !empty($data['presentation_faite']);
+    $dateInvitation = validateDateOrNull($data['date_invitation'] ?? null);
+    $datePresentation = validateDateOrNull($data['date_presentation'] ?? null);
+    $dateInscription = validateDateOrNull($data['date_inscription'] ?? null);
+    $prochaineRelance = validateDateOrNull($data['prochaine_relance'] ?? null);
+
+    if ($invitationFaite && $dateInvitation === null) {
+        respond(['success' => false, 'message' => 'La date d’invitation est obligatoire si l’invitation a été faite.'], 422);
+    }
+
+    if ($presentationFaite && $datePresentation === null) {
+        respond(['success' => false, 'message' => 'La date de présentation est obligatoire si la présentation a été faite.'], 422);
+    }
+
+    return [
+        'nom' => $nom,
+        'prenom' => $prenom,
+        'telephone' => $telephone,
+        'email' => $email !== '' ? $email : null,
+        'source' => $source !== '' ? $source : null,
+        'statut' => $statut,
+        'invitation_faite' => $invitationFaite ? 1 : 0,
+        'date_invitation' => $dateInvitation,
+        'presentation_faite' => $presentationFaite ? 1 : 0,
+        'date_presentation' => $datePresentation,
+        'date_inscription' => $dateInscription,
+        'prochaine_relance' => $prochaineRelance,
+        'notes' => $notes !== '' ? $notes : null,
+    ];
+}
 
 switch ($method) {
 
@@ -42,6 +132,7 @@ switch ($method) {
                     'taux_conversion' => $taux_conversion
                 ]
             ]);
+            break;
         }
 
         if (!empty($_GET['id'])) {
@@ -83,14 +174,7 @@ switch ($method) {
     // ---------- CRÉATION ----------
     case 'POST':
         $data = jsonInput();
-        if (empty($data['nom']) || empty($data['prenom']) || empty($data['telephone'])) {
-            respond(['success' => false, 'message' => 'Nom, prénom et téléphone sont obligatoires.'], 422);
-        }
-
-        $statut = $data['statut'] ?? 'nouveau';
-        if (!in_array($statut, $validStatuts, true)) {
-            respond(['success' => false, 'message' => 'Statut invalide.'], 422);
-        }
+        $payload = normalizeProspectPayload($data, false);
 
         $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
         $sql = "
@@ -109,19 +193,19 @@ switch ($method) {
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
             'user_id' => $userId,
-            'nom' => $data['nom'],
-            'prenom' => $data['prenom'],
-            'telephone' => $data['telephone'],
-            'email' => $data['email'] ?? null,
-            'source' => $data['source'] ?? null,
-            'statut' => $statut,
-            'invitation_faite' => !empty($data['invitation_faite']) ? 1 : 0,
-            'date_invitation' => $data['date_invitation'] ?? null,
-            'presentation_faite' => !empty($data['presentation_faite']) ? 1 : 0,
-            'date_presentation' => $data['date_presentation'] ?? null,
-            'date_inscription' => $data['date_inscription'] ?? null,
-            'prochaine_relance' => $data['prochaine_relance'] ?? null,
-            'notes' => $data['notes'] ?? null,
+            'nom' => $payload['nom'],
+            'prenom' => $payload['prenom'],
+            'telephone' => $payload['telephone'],
+            'email' => $payload['email'],
+            'source' => $payload['source'],
+            'statut' => $payload['statut'],
+            'invitation_faite' => $payload['invitation_faite'],
+            'date_invitation' => $payload['date_invitation'],
+            'presentation_faite' => $payload['presentation_faite'],
+            'date_presentation' => $payload['date_presentation'],
+            'date_inscription' => $payload['date_inscription'],
+            'prochaine_relance' => $payload['prochaine_relance'],
+            'notes' => $payload['notes'],
         ]);
 
         if ($driver === 'pgsql') {
@@ -151,22 +235,16 @@ switch ($method) {
 
         // Mise à jour rapide du statut
         if (isset($data['statut']) && !isset($data['nom'])) {
-            if (!in_array($data['statut'], $validStatuts, true)) {
+            $statut = normalizeText((string) $data['statut']);
+            if (!in_array($statut, $validStatuts, true)) {
                 respond(['success' => false, 'message' => 'Statut invalide.'], 422);
             }
             $stmt = $pdo->prepare("UPDATE prospects SET statut = ?, date_maj = NOW() WHERE id = ? AND user_id = ?");
-            $stmt->execute([$data['statut'], $data['id'], $userId]);
+            $stmt->execute([$statut, $data['id'], $userId]);
             respond(['success' => true, 'message' => 'Statut mis à jour.']);
         }
 
-        if (empty($data['nom']) || empty($data['prenom']) || empty($data['telephone'])) {
-            respond(['success' => false, 'message' => 'Nom, prénom et téléphone sont obligatoires.'], 422);
-        }
-
-        $statut = $data['statut'] ?? 'nouveau';
-        if (!in_array($statut, $validStatuts, true)) {
-            respond(['success' => false, 'message' => 'Statut invalide.'], 422);
-        }
+        $payload = normalizeProspectPayload($data, true);
 
         $stmt = $pdo->prepare("
             UPDATE prospects SET
@@ -188,21 +266,21 @@ switch ($method) {
         ");
 
         $stmt->execute([
-            'id' => $data['id'],
+            'id' => (int) $data['id'],
             'user_id' => $userId,
-            'nom' => $data['nom'],
-            'prenom' => $data['prenom'],
-            'telephone' => $data['telephone'],
-            'email' => $data['email'] ?? null,
-            'source' => $data['source'] ?? null,
-            'statut' => $statut,
-            'invitation_faite' => !empty($data['invitation_faite']) ? 1 : 0,
-            'date_invitation' => $data['date_invitation'] ?? null,
-            'presentation_faite' => !empty($data['presentation_faite']) ? 1 : 0,
-            'date_presentation' => $data['date_presentation'] ?? null,
-            'date_inscription' => $data['date_inscription'] ?? null,
-            'prochaine_relance' => $data['prochaine_relance'] ?? null,
-            'notes' => $data['notes'] ?? null,
+            'nom' => $payload['nom'],
+            'prenom' => $payload['prenom'],
+            'telephone' => $payload['telephone'],
+            'email' => $payload['email'],
+            'source' => $payload['source'],
+            'statut' => $payload['statut'],
+            'invitation_faite' => $payload['invitation_faite'],
+            'date_invitation' => $payload['date_invitation'],
+            'presentation_faite' => $payload['presentation_faite'],
+            'date_presentation' => $payload['date_presentation'],
+            'date_inscription' => $payload['date_inscription'],
+            'prochaine_relance' => $payload['prochaine_relance'],
+            'notes' => $payload['notes'],
         ]);
 
         respond(['success' => true, 'message' => 'Prospect mis à jour.']);
