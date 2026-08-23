@@ -273,6 +273,18 @@ function initDatabaseIfNeeded(PDO $pdo, string $driver): void
     }
 }
 
+function getUserColumns(PDO $pdo): array
+{
+    $columns = $pdo->query("
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_schema = current_schema() AND table_name = 'users'
+        ORDER BY ordinal_position
+    ")->fetchAll(PDO::FETCH_COLUMN);
+
+    return array_map('strtolower', $columns ?: []);
+}
+
 function repairPostgresUserTable(PDO $pdo): void
 {
     $tableCheck = $pdo->query("SELECT to_regclass('public.users')")->fetchColumn();
@@ -289,14 +301,7 @@ function repairPostgresUserTable(PDO $pdo): void
         return;
     }
 
-    $columns = $pdo->query("
-        SELECT column_name, is_nullable, data_type
-        FROM information_schema.columns
-        WHERE table_schema = current_schema() AND table_name = 'users'
-        ORDER BY ordinal_position
-    ")->fetchAll();
-
-    $columnNames = array_column($columns, 'column_name');
+    $columnNames = getUserColumns($pdo);
 
     if (!in_array('id', $columnNames, true)) {
         $pdo->exec("ALTER TABLE users ADD COLUMN id SERIAL;");
@@ -319,7 +324,7 @@ function repairPostgresUserTable(PDO $pdo): void
 
     if (in_array('name', $columnNames, true) && !in_array('nom', $columnNames, true)) {
         $pdo->exec("ALTER TABLE users RENAME COLUMN name TO nom");
-        $columnNames = array_values(array_map(static fn($item) => $item['column_name'], $pdo->query("SELECT column_name FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'users' ORDER BY ordinal_position")->fetchAll()));
+        $columnNames = getUserColumns($pdo);
     }
 
     if (in_array('nom', $columnNames, true) && in_array('name', $columnNames, true)) {

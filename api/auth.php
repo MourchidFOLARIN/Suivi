@@ -24,17 +24,17 @@ if ($method === 'POST') {
         // Créer l'utilisateur
         $hash = password_hash($data['mot_de_passe'], PASSWORD_BCRYPT);
         $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $userColumns = getUserColumns($pdo);
+        $nomColumn = in_array('nom', $userColumns, true) ? 'nom' : 'name';
 
         try {
             if ($driver === 'pgsql') {
-                // PostgreSQL : utiliser RETURNING id (lastInsertId sur séquence est peu fiable avec PDO)
-                $stmt = $pdo->prepare("INSERT INTO users (nom, email, mot_de_passe) VALUES (?, ?, ?) RETURNING id");
+                $stmt = $pdo->prepare("INSERT INTO users ({$nomColumn}, email, mot_de_passe) VALUES (?, ?, ?) RETURNING id");
                 $stmt->execute([$data['nom'], $data['email'], $hash]);
                 $row = $stmt->fetch();
                 $userId = (int) $row['id'];
             } else {
-                // MySQL
-                $stmt = $pdo->prepare("INSERT INTO users (nom, email, mot_de_passe) VALUES (?, ?, ?)");
+                $stmt = $pdo->prepare("INSERT INTO users ({$nomColumn}, email, mot_de_passe) VALUES (?, ?, ?)");
                 $stmt->execute([$data['nom'], $data['email'], $hash]);
                 $userId = (int) $pdo->lastInsertId();
             }
@@ -76,9 +76,10 @@ if ($method === 'POST') {
         $stmt->execute([$data['email']]);
         $user = $stmt->fetch();
 
-        if ($user && password_verify($data['mot_de_passe'], $user['mot_de_passe'])) {
+        if ($user && password_verify($data['mot_de_passe'], $user['mot_de_passe'] ?? $user['password'] ?? '')) {
+            $userNom = $user['nom'] ?? $user['name'] ?? 'Utilisateur';
             $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_nom'] = $user['nom'];
+            $_SESSION['user_nom'] = $userNom;
             $_SESSION['user_email'] = $user['email'];
 
             respond([
@@ -87,7 +88,7 @@ if ($method === 'POST') {
                 'csrf_token' => ensureCsrfToken(),
                 'user' => [
                     'id' => $user['id'],
-                    'nom' => $user['nom'],
+                    'nom' => $userNom,
                     'email' => $user['email']
                 ]
             ]);
