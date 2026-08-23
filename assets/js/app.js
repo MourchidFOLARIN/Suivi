@@ -708,6 +708,18 @@ function fermerModal() {
 async function soumettreForm(e) {
     e.preventDefault();
 
+    const requiredFields = [
+        ['f-nom', 'le nom'],
+        ['f-prenom', 'le prénom'],
+        ['f-telephone', 'le téléphone'],
+    ];
+    const missingField = requiredFields.find(([id]) => !document.getElementById(id).value.trim());
+    if (missingField) {
+        document.getElementById(missingField[0]).focus();
+        afficherToast(`Veuillez renseigner ${missingField[1]}.`, true);
+        return;
+    }
+
     const payload = {
         nom: document.getElementById('f-nom').value.trim(),
         prenom: document.getElementById('f-prenom').value.trim(),

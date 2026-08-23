@@ -1,6 +1,6 @@
 // Nouveau cache afin de supprimer les anciennes réponses API éventuellement
 // mises en cache par les versions précédentes du service worker.
-const CACHE_NAME = 'suivi-prospects-v5';
+const CACHE_NAME = 'suivi-prospects-v6';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
